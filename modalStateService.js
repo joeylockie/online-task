@@ -81,6 +81,3 @@ const ModalStateService = {
 };
 
 export default ModalStateService;
-
-// REMOVED: LoggingService.debug("modalStateService.js loaded as ES6 module.", { module: 'modalStateService' });
-// console.log("modalStateService.js module parsed and ModalStateService object is now defined."); // Optional

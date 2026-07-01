@@ -1,7 +1,7 @@
 // feature_shopping_list.js
 // Manages the Shopping List Feature.
 
-// import { isFeatureEnabled } from './featureFlagService.js'; // REMOVED
+
 import LoggingService from './loggingService.js';
 
 /**

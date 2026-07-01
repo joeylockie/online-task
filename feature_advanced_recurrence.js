@@ -1,7 +1,6 @@
 // feature_advanced_recurrence.js
 // Manages logic and UI for the advanced recurrence feature.
 
-// import { isFeatureEnabled } from './featureFlagService.js'; // REMOVED
 import LoggingService from './loggingService.js';
 
 // --- Private Helper Function ---

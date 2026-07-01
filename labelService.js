@@ -5,7 +5,6 @@
 import AppStore from './store.js';
 import EventBus from './eventBus.js';
 import LoggingService from './loggingService.js';
-// import db from './database.js'; // <-- REMOVED
 
 // --- NEW API Helper Function ---
 /**
