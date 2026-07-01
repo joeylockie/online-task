@@ -5,7 +5,7 @@ import AppStore from './store.js';
 import ViewManager from './viewManager.js';
 import ModalStateService from './modalStateService.js';
 import EventBus from './eventBus.js';
-import { formatDate, formatTime, formatDuration, formatMillisecondsToHMS } from './utils.js';
+import { formatDate, formatTime } from './utils.js';
 import LoggingService from './loggingService.js';
 
 // Import functions from other UI modules
@@ -14,7 +14,7 @@ import {
 } from './tasks_modal_interactions.js';
 
 // Import the newly created rendering functions
-import { renderTaskListView, renderBulkActionControls } from './tasks_list_view.js';
+import { renderTaskListView } from './tasks_list_view.js';
 
 // DOM Elements (declared with let, will be module-scoped)
 export let taskSidebar, sidebarToggleBtn, sidebarToggleIcon, sidebarTextElements, sidebarIconOnlyButtons;
@@ -23,25 +23,22 @@ export let smartViewButtonsContainer, smartViewButtons, messageBox;
 export let addTaskModal, modalDialogAdd, openAddModalButton, closeAddModalBtn, cancelAddModalBtn, modalTodoFormAdd;
 export let modalTaskInputAdd, modalDueDateInputAdd, modalTimeInputAdd;
 export let modalPriorityInputAdd, modalLabelInputAdd, existingLabelsDatalist, modalNotesInputAdd;
-export let modalRemindMeAddContainer, modalRemindMeAdd, reminderOptionsAdd, modalReminderDateAdd, modalReminderTimeAdd, modalReminderEmailAdd;
 export let viewEditTaskModal, modalDialogViewEdit, closeViewEditModalBtn, cancelViewEditModalBtn, modalTodoFormViewEdit;
 export let modalViewEditTaskId, modalTaskInputViewEdit, modalDueDateInputViewEdit, modalTimeInputViewEdit;
 export let modalPriorityInputViewEdit, modalLabelInputViewEdit;
-export let existingLabelsEditDatalist, modalNotesInputViewEdit, modalRemindMeViewEditContainer, modalRemindMeViewEdit;
-export let reminderOptionsViewEdit, modalReminderDateViewEdit, modalReminderTimeViewEdit, modalReminderEmailViewEdit;
+export let existingLabelsEditDatalist, modalNotesInputViewEdit;
 export let viewTaskDetailsModal, modalDialogViewDetails, closeViewDetailsModalBtn, closeViewDetailsSecondaryBtn;
 export let editFromViewModalBtn, deleteFromViewModalBtn, viewTaskText, viewTaskDueDate, viewTaskTime;
-export let viewTaskPriority, viewTaskStatus, viewTaskLabel, viewTaskNotes, viewTaskReminderSection, viewTaskReminderStatus;
-export let viewTaskReminderDetails, viewTaskReminderDate, viewTaskReminderTime, viewTaskReminderEmail;
+export let viewTaskPriority, viewTaskStatus, viewTaskLabel, viewTaskNotes;
 export let manageLabelsModal, modalDialogManageLabels, closeManageLabelsModalBtn, closeManageLabelsSecondaryBtn;
 export let addNewLabelForm, newLabelInput, existingLabelsList;
 export let settingsModal, modalDialogSettings, openSettingsModalButton, closeSettingsModalBtn, closeSettingsSecondaryBtn;
-export let settingsClearCompletedBtn, settingsManageLabelsBtn, settingsManageRemindersBtn;
+export let settingsClearCompletedBtn, settingsManageLabelsBtn;
 export let featureFlagsListContainer;
 export let yourTasksHeading, mainContentArea;
 export let criticalErrorDisplay, criticalErrorMessage, criticalErrorId, closeCriticalErrorBtn;
 
-// NEW: Smart View DOM Elements (added newSmartViewIconInput)
+// Smart View DOM Elements
 export let settingsManageSmartViewsBtn, manageSmartViewsModal, closeManageSmartViewsModalBtn, closeManageSmartViewsSecondaryBtn;
 export let addNewSmartViewForm, newSmartViewNameInput, newSmartViewLabelInput, newSmartViewIconInput, existingSmartViewsList, existingLabelsSmartViewDatalist;
 
@@ -75,12 +72,6 @@ export function initializeDOMElements() {
     modalLabelInputAdd = document.getElementById('modalLabelInputAdd');
     existingLabelsDatalist = document.getElementById('existingLabels');
     modalNotesInputAdd = document.getElementById('modalNotesInputAdd');
-    modalRemindMeAddContainer = document.getElementById('modalRemindMeAddContainer');
-    modalRemindMeAdd = document.getElementById('modalRemindMeAdd');
-    reminderOptionsAdd = document.getElementById('reminderOptionsAdd');
-    modalReminderDateAdd = document.getElementById('modalReminderDateAdd');
-    modalReminderTimeAdd = document.getElementById('modalReminderTimeAdd');
-    modalReminderEmailAdd = document.getElementById('modalReminderEmailAdd');
     viewEditTaskModal = document.getElementById('viewEditTaskModal');
     modalDialogViewEdit = document.getElementById('modalDialogViewEdit');
     closeViewEditModalBtn = document.getElementById('closeViewEditModalBtn');
@@ -94,12 +85,6 @@ export function initializeDOMElements() {
     modalLabelInputViewEdit = document.getElementById('modalLabelInputViewEdit');
     existingLabelsEditDatalist = document.getElementById('existingLabelsEdit');
     modalNotesInputViewEdit = document.getElementById('modalNotesInputViewEdit');
-    modalRemindMeViewEditContainer = document.getElementById('modalRemindMeViewEditContainer');
-    modalRemindMeViewEdit = document.getElementById('modalRemindMeViewEdit');
-    reminderOptionsViewEdit = document.getElementById('reminderOptionsViewEdit');
-    modalReminderDateViewEdit = document.getElementById('modalReminderDateViewEdit');
-    modalReminderTimeViewEdit = document.getElementById('modalReminderTimeViewEdit');
-    modalReminderEmailViewEdit = document.getElementById('modalReminderEmailViewEdit');
     viewTaskDetailsModal = document.getElementById('viewTaskDetailsModal');
     modalDialogViewDetails = document.getElementById('modalDialogViewDetails');
     closeViewDetailsModalBtn = document.getElementById('closeViewDetailsModalBtn');
@@ -113,12 +98,6 @@ export function initializeDOMElements() {
     viewTaskStatus = document.getElementById('viewTaskStatus');
     viewTaskLabel = document.getElementById('viewTaskLabel');
     viewTaskNotes = document.getElementById('viewTaskNotes');
-    viewTaskReminderSection = document.getElementById('viewTaskReminderSection');
-    viewTaskReminderStatus = document.getElementById('viewTaskReminderStatus');
-    viewTaskReminderDetails = document.getElementById('viewTaskReminderDetails');
-    viewTaskReminderDate = document.getElementById('viewTaskReminderDate');
-    viewTaskReminderTime = document.getElementById('viewTaskReminderTime');
-    viewTaskReminderEmail = document.getElementById('viewTaskReminderEmail');
     manageLabelsModal = document.getElementById('manageLabelsModal');
     modalDialogManageLabels = document.getElementById('modalDialogManageLabels');
     closeManageLabelsModalBtn = document.getElementById('closeManageLabelsModalBtn');
@@ -133,7 +112,6 @@ export function initializeDOMElements() {
     closeSettingsSecondaryBtn = document.getElementById('closeSettingsSecondaryBtn');
     settingsClearCompletedBtn = document.getElementById('settingsClearCompletedBtn');
     settingsManageLabelsBtn = document.getElementById('settingsManageLabelsBtn');
-    settingsManageRemindersBtn = document.getElementById('settingsManageRemindersBtn');
     featureFlagsListContainer = document.getElementById('featureFlagsListContainer');
     yourTasksHeading = document.getElementById('yourTasksHeading');
     criticalErrorDisplay = document.getElementById('criticalErrorDisplay');
@@ -149,7 +127,7 @@ export function initializeDOMElements() {
     addNewSmartViewForm = document.getElementById('addNewSmartViewForm');
     newSmartViewNameInput = document.getElementById('newSmartViewNameInput');
     newSmartViewLabelInput = document.getElementById('newSmartViewLabelInput');
-    newSmartViewIconInput = document.getElementById('newSmartViewIconInput'); // ADDED THIS
+    newSmartViewIconInput = document.getElementById('newSmartViewIconInput');
     existingSmartViewsList = document.getElementById('existingSmartViewsList');
     existingLabelsSmartViewDatalist = document.getElementById('existingLabelsSmartView');
  
@@ -263,11 +241,9 @@ export function renderCustomSmartViewButtons(customViews) {
         const btn = document.createElement('button');
         btn.dataset.filter = view.label; 
         
-        // UPDATED: Now using py-1.5 and md:py-2 to match the new compact style
         btn.className = 'smart-view-btn custom-smart-view-btn w-full px-3 py-1.5 md:px-3 md:py-2 rounded-lg transition-colors duration-300 flex items-center sidebar-button-icon-only';
         
         const iconClass = view.icon || 'fas fa-hashtag';
-        
         btn.innerHTML = `<i class="${iconClass} md:mr-2.5"></i> <span class="sidebar-text-content">${view.name}</span>`;
         
         if (completedBtn) {
@@ -277,10 +253,10 @@ export function renderCustomSmartViewButtons(customViews) {
         }
     });
 
-    // 5. Force a sync of the sidebar styles so the new buttons get the correct alignment based on whether the sidebar is currently open or closed
+    // 5. Force a sync of the sidebar styles
     setSidebarMinimized(!!isMinimized);
     
-    // 6. Ensure styling applies properly if the newly added button is already active
+    // 6. Ensure styling applies properly
     styleSmartViewButtons();
 }
 
@@ -293,16 +269,12 @@ export function refreshTaskView() {
     }
 
     if (!mainContentArea || !ViewManager || typeof window.isFeatureEnabled !== 'function') { LoggingService.error("[RefreshTaskView] Core dependencies not found.", null, {module: 'tasks_ui_rendering'}); return; } 
-    updateViewToggleButtonsState();
     updateYourTasksHeading();
     styleSmartViewButtons();
     updateSortButtonStates();
 
-    ViewManager.setTaskViewMode('list');
     renderTaskListView();
-    
     updateClearCompletedButtonState();
-    renderBulkActionControls();
     LoggingService.debug(`[UI Rendering] Task view refreshed for mode: list`, {module: 'tasks_ui_rendering'});
 }
 
@@ -366,10 +338,6 @@ export function updateClearCompletedButtonState() {
     settingsClearCompletedBtn.classList.toggle('cursor-not-allowed', !hasCompleted);
 }
 
-export function updateViewToggleButtonsState() {
-    // Empty as buttons are gone.
-}
-
 export function updateYourTasksHeading() {
     if (!yourTasksHeading || !ViewManager) return;
     const currentFilter = ViewManager.getCurrentFilter();
@@ -382,7 +350,6 @@ export function updateYourTasksHeading() {
     else if (currentFilter === 'shopping_list') title = "Shopping List";
     else if (currentFilter === 'work') title = "Work Items";
     else {
-        // This naturally handles custom smart views
         title = `Label: ${currentFilter.charAt(0).toUpperCase() + currentFilter.slice(1)}`;
     }
     yourTasksHeading.textContent = title;
@@ -415,7 +382,6 @@ export function initializeUiRenderingSubscriptions() {
         LoggingService.debug("[UI Rendering] Event received: labelsChanged. Populating datalists.", {module: 'tasks_ui_rendering'});
         if(existingLabelsDatalist) populateDatalist(existingLabelsDatalist);
         if(existingLabelsEditDatalist) populateDatalist(existingLabelsEditDatalist);
-        
         if(existingLabelsSmartViewDatalist) populateDatalist(existingLabelsSmartViewDatalist); 
         
         if (manageLabelsModal && !manageLabelsModal.classList.contains('hidden')) {

@@ -8,8 +8,6 @@ import EventBus from './eventBus.js';
 import { formatDate, formatTime } from './utils.js';
 import { openViewTaskDetailsModal } from './tasks_modal_interactions.js';
 
-let isArchiveViewActive = false;
-
 // DOM elements are now imported from the tasks-specific rendering module.
 import {
     taskList,
@@ -98,11 +96,7 @@ export function renderTaskListView() {
         
         filteredTasks = currentTasks.filter(task => {
             if (!task.completed) return false;
-            
-            // If archive mode is off, hide tasks completed more than 60 days ago
-            if (!isArchiveViewActive && task.completedDate && task.completedDate < sixtyDaysAgoMs) {
-                return false;
-            }
+            if (task.completedDate && task.completedDate < sixtyDaysAgoMs) return false;
             return true;
         });
     } else { 
@@ -154,31 +148,6 @@ export function renderTaskListView() {
     if (emptyState) emptyState.classList.toggle('hidden', currentTasks.length !== 0);
     if (noMatchingTasks) noMatchingTasks.classList.toggle('hidden', !(currentTasks.length > 0 && filteredTasks.length === 0));
     if (taskList) taskList.classList.toggle('hidden', filteredTasks.length === 0 && currentTasks.length > 0);
-
-    // --- RENDER ARCHIVE TOGGLE BUTTON ---
-    if (currentFilterVal === 'completed') {
-        const archiveToggleContainer = document.createElement('div');
-        archiveToggleContainer.className = 'flex justify-center mb-4 pb-4 border-b border-slate-200 dark:border-slate-700';
-        
-        const archiveBtn = document.createElement('button');
-        archiveBtn.className = 'px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-medium hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors flex items-center gap-2';
-        
-        if (isArchiveViewActive) {
-            archiveBtn.innerHTML = '<i class="fas fa-eye-slash text-slate-500"></i> Hide Archived Tasks';
-        } else {
-            archiveBtn.innerHTML = '<i class="fas fa-archive text-slate-500"></i> View Archived Tasks (Older than 60 days)';
-        }
-
-        archiveBtn.addEventListener('click', () => {
-            isArchiveViewActive = !isArchiveViewActive;
-            renderTaskListView();
-        });
-
-        archiveToggleContainer.appendChild(archiveBtn);
-        taskList.appendChild(archiveToggleContainer);
-    } else {
-        isArchiveViewActive = false; 
-    }
 
     // Render Tasks
     filteredTasks.forEach((task) => {
@@ -286,13 +255,6 @@ export function renderTaskListView() {
             taskList.appendChild(li);
         }
     });
-}
-
-/**
- * Renders the bulk action controls based on current selections and feature flags.
- */
-export function renderBulkActionControls() {
-    // Empty as feature is removed.
 }
 
 console.log("tasks_list_view.js loaded.");

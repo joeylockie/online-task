@@ -10,7 +10,6 @@ import {
     openSettingsModal,
     closeManageLabelsModal,
     closeViewTaskDetailsModal,
-    openDesktopNotificationsSettingsModal, closeDesktopNotificationsSettingsModal
 } from './tasks_modal_interactions.js';
 
 // Helper function to attach listeners
@@ -31,8 +30,7 @@ export function setupModalEventListeners() {
     attachListener('openAddModalButton', 'click', openAddModal, 'openAddModal');
     attachListener('settingsManageLabelsBtn', 'click', openManageLabelsModal, 'openManageLabelsModal');
     attachListener('openSettingsModalButton', 'click', openSettingsModal, 'openSettingsModal');
-    attachListener('settingsManageNotificationsBtn', 'click', openDesktopNotificationsSettingsModal, 'openDesktopNotificationsSettingsModal');
-
+  
     // Modal Closers
     const modalCloserListeners = [
         { id: 'closeAddModalBtn', handler: closeAddModal, name: 'closeAddModal (primary)' },
@@ -50,9 +48,6 @@ export function setupModalEventListeners() {
         { id: 'closeManageLabelsModalBtn', handler: closeManageLabelsModal, name: 'closeManageLabelsModal (primary)' },
         { id: 'closeManageLabelsSecondaryBtn', handler: closeManageLabelsModal, name: 'closeManageLabelsModal (secondary)' },
         { id: 'manageLabelsModal', handler: (event) => { if(event.target.id === 'manageLabelsModal') closeManageLabelsModal(); }, name: 'closeManageLabelsModal (backdrop)'},
-        { id: 'closeDesktopNotificationsSettingsModalBtn', handler: closeDesktopNotificationsSettingsModal, name: 'closeDesktopNotificationsSettingsModal (primary)' },
-        { id: 'closeDesktopNotificationsSettingsSecondaryBtn', handler: closeDesktopNotificationsSettingsModal, name: 'closeDesktopNotificationsSettingsModal (secondary)' },
-        { id: 'desktopNotificationsSettingsModal', handler: (event) => { if (event.target.id === 'desktopNotificationsSettingsModal') closeDesktopNotificationsSettingsModal(); }, name: 'closeDesktopNotificationsSettingsModal (backdrop)'}
     ];
     modalCloserListeners.forEach(listener => attachListener(listener.id, 'click', listener.handler, listener.name));
 
@@ -67,7 +62,6 @@ export function setupModalEventListeners() {
             else if (document.getElementById('viewTaskDetailsModal') && !document.getElementById('viewTaskDetailsModal').classList.contains('hidden')) closeViewTaskDetailsModal();
             else if (document.getElementById('settingsModal') && !document.getElementById('settingsModal').classList.contains('hidden')) closeSettingsModal();
             else if (document.getElementById('manageLabelsModal') && !document.getElementById('manageLabelsModal').classList.contains('hidden')) closeManageLabelsModal();
-            else if (document.getElementById('desktopNotificationsSettingsModal') && !document.getElementById('desktopNotificationsSettingsModal').classList.contains('hidden')) closeDesktopNotificationsSettingsModal();
         }
     });
     LoggingService.debug(`[TasksModalEvents] Document keydown listener for modals attached.`, { functionName });

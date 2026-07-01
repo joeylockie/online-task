@@ -4,7 +4,6 @@
 import AppStore from './store.js';
 import ModalStateService from './modalStateService.js';
 import { formatDate, formatTime, getTodayDateString } from './utils.js';
-import EventBus from './eventBus.js';
 import LoggingService from './loggingService.js';
 
 import {
@@ -12,7 +11,6 @@ import {
 } from './tasks_ui_rendering.js';
 
 import { handleDeleteLabel, clearTempSubTasksForAddModal } from './tasks_ui_event_handlers.js';
-import { DesktopNotificationsFeature } from './feature_desktop_notifications.js';
 import { AdvancedRecurrenceFeature } from './feature_advanced_recurrence.js';
 
 
@@ -26,16 +24,10 @@ export function openAddModal() {
     const modalTodoFormAddEl = document.getElementById('modalTodoFormAdd');
     const modalPriorityInputAddEl = document.getElementById('modalPriorityInputAdd');
     const existingLabelsDatalistEl = document.getElementById('existingLabels');
-    const modalRemindMeAddEl = document.getElementById('modalRemindMeAdd');
-    const modalReminderDateAddEl = document.getElementById('modalReminderDateAdd');
-    const modalReminderTimeAddEl = document.getElementById('modalReminderTimeAdd');
-    const modalReminderEmailAddEl = document.getElementById('modalReminderEmailAdd');
-    const reminderOptionsAddEl = document.getElementById('reminderOptionsAdd');
     const modalDueDateInputAddEl = document.getElementById('modalDueDateInputAdd');
     const modalRecurrenceAddEl = document.getElementById('modalRecurrenceAdd');
     const recurrenceOptionsAddEl = document.getElementById('recurrenceOptionsAdd');
     const recurrenceEndDateAddEl = document.getElementById('recurrenceEndDateAdd');
-    const modalHideFromMirrorAddEl = document.getElementById('modalHideFromMirrorAdd');
 
     addTaskModalEl.classList.remove('hidden');
     setTimeout(() => { modalDialogAddEl.classList.remove('scale-95', 'opacity-0'); modalDialogAddEl.classList.add('scale-100', 'opacity-100'); }, 10);
@@ -47,15 +39,8 @@ export function openAddModal() {
 
     if (existingLabelsDatalistEl) populateDatalist(existingLabelsDatalistEl);
 
-    if (modalRemindMeAddEl) modalRemindMeAddEl.checked = false;
-    if (reminderOptionsAddEl) reminderOptionsAddEl.classList.add('hidden');
-
-    // Reset Hide from Mirror Checkbox
-    if (modalHideFromMirrorAddEl) modalHideFromMirrorAddEl.checked = false;
-
     const todayStr = getTodayDateString();
     if (modalDueDateInputAddEl) modalDueDateInputAddEl.min = todayStr;
-    if (modalReminderDateAddEl) modalReminderDateAddEl.min = todayStr;
     if (recurrenceEndDateAddEl) recurrenceEndDateAddEl.min = todayStr;
 
     clearTempSubTasksForAddModal();
@@ -95,12 +80,6 @@ export function openViewEditModal(taskId) {
     document.getElementById('modalPriorityInputViewEdit').value = task.priority;
     document.getElementById('modalLabelInputViewEdit').value = task.label || '';
     document.getElementById('modalNotesInputViewEdit').value = task.notes || '';
-    
-    // Populate Hide from Mirror Checkbox
-    const modalHideFromMirrorViewEditEl = document.getElementById('modalHideFromMirrorViewEdit');
-    if (modalHideFromMirrorViewEditEl) {
-        modalHideFromMirrorViewEditEl.checked = task.hideFromMirror === 1 || task.hideFromMirror === true;
-    }
     
     populateDatalist(document.getElementById('existingLabelsEdit'));
     
@@ -159,22 +138,6 @@ export function openViewTaskDetailsModal(taskId) {
     document.getElementById('viewTaskLabel').textContent = task.label || 'None';
     
     document.getElementById('viewTaskNotes').textContent = task.notes || 'No notes added.';
-
-    // Handle Reminder Section
-    const reminderSection = document.getElementById('viewTaskReminderSection');
-    const reminderStatus = document.getElementById('viewTaskReminderStatus');
-    const reminderDetails = document.getElementById('viewTaskReminderDetails');
-    
-    if (task.isReminderSet) {
-        reminderStatus.textContent = 'Active';
-        document.getElementById('viewTaskReminderDate').textContent = formatDate(task.reminderDate);
-        document.getElementById('viewTaskReminderTime').textContent = formatTime(task.reminderTime);
-        document.getElementById('viewTaskReminderEmail').textContent = task.reminderEmail;
-        reminderDetails.classList.remove('hidden');
-    } else {
-        reminderStatus.textContent = 'Not set';
-        reminderDetails.classList.add('hidden');
-    }
 
     const viewTaskDetailsModalEl = document.getElementById('viewTaskDetailsModal');
     viewTaskDetailsModalEl.classList.remove('hidden');
@@ -255,20 +218,4 @@ export function closeSettingsModal() {
     const modalDialogSettingsEl = document.getElementById('modalDialogSettings');
     modalDialogSettingsEl.classList.add('scale-95', 'opacity-0');
     setTimeout(() => { settingsModalEl.classList.add('hidden'); }, 200);
-}
-
-export function openDesktopNotificationsSettingsModal() {
-    if (DesktopNotificationsFeature?.refreshSettingsUIDisplay) {
-        DesktopNotificationsFeature.refreshSettingsUIDisplay();
-    }
-    const modalEl = document.getElementById('desktopNotificationsSettingsModal');
-    modalEl.classList.remove('hidden');
-    setTimeout(() => { document.getElementById('modalDialogDesktopNotificationsSettings').classList.remove('scale-95', 'opacity-0'); }, 10);
-}
-
-export function closeDesktopNotificationsSettingsModal() {
-    const modalEl = document.getElementById('desktopNotificationsSettingsModal');
-    const dialogEl = document.getElementById('modalDialogDesktopNotificationsSettings');
-    dialogEl.classList.add('scale-95', 'opacity-0');
-    setTimeout(() => { modalEl.classList.add('hidden'); }, 200);
 }

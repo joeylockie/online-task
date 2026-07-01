@@ -10,7 +10,6 @@ import LoggingService from './loggingService.js';
 let _currentFilter = 'inbox';
 let _currentSort = 'default';
 let _currentSearchTerm = '';
-const _currentTaskViewMode = 'list'; // View mode is now always 'list'
 
 function _publish(eventName, data) {
     if (EventBus && typeof EventBus.publish === 'function') {
@@ -18,19 +17,6 @@ function _publish(eventName, data) {
     } else {
         LoggingService.warn(`[ViewManager] EventBus not available to publish event: ${eventName}`, { eventName, data, functionName: '_publish' });
     }
-}
-
-function setTaskViewMode(mode) {
-    // This function is now a no-op as the view is always 'list'.
-    // It's kept for compatibility in case other parts of the code call it.
-    const functionName = 'setTaskViewMode';
-    if (mode !== 'list') {
-        LoggingService.debug(`[ViewManager] Attempted to set view mode to "${mode}", but only "list" is supported. No change made.`, { attemptedMode: mode, functionName });
-    }
-}
-
-function getCurrentTaskViewMode() {
-    return _currentTaskViewMode;
 }
 
 function setCurrentFilter(filter) {
@@ -93,9 +79,9 @@ function getFilteredTasksForBulkAction() {
     
     // Core Feature Labels
     const shoppingLabels = ['shopping', 'buy', 'store'];
-    const workLabels = ['work']; // FIX: Added missing workLabels definition!
+    const workLabels = ['work'];
 
-    // NEW: Get your dynamically created custom smart view labels
+    // Dynamic dynamic custom smart view labels
     const prefs = AppStore.getUserPreferences();
     const customViews = prefs.customSmartViews || [];
     const customLabels = customViews.map(v => v.label.toLowerCase());
@@ -107,7 +93,6 @@ function getFilteredTasksForBulkAction() {
             if (!task.label) return true; // Keep tasks with no label
             
             const taskLabel = task.label.toLowerCase();
-            // Hide task if it belongs to shopping, work, or ANY custom smart view
             if (shoppingLabels.includes(taskLabel)) return false;
             if (workLabels.includes(taskLabel)) return false;
             if (customLabels.includes(taskLabel)) return false;
@@ -141,7 +126,6 @@ function getFilteredTasksForBulkAction() {
     } else if (_currentFilter === 'completed') {
         filteredTasks = currentTasks.filter(task => task.completed);
     } else { 
-        // Assume label filter: This automatically handles your custom views!
         filteredTasks = currentTasks.filter(task => task.label && task.label.toLowerCase() === _currentFilter.toLowerCase() && !task.completed);
     }
 
@@ -165,8 +149,6 @@ function getFilteredTasksForBulkAction() {
 }
 
 const ViewManager = {
-    setTaskViewMode,
-    getCurrentTaskViewMode,
     setCurrentFilter,
     getCurrentFilter,
     setCurrentSort,
