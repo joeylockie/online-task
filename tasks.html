@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LockieMedia Management Service</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <script src="tailwind.js"></script>
+    <link rel="stylesheet" href="node_modules/@fortawesome/fontawesome-free/css/all.min.css">
+    
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/tasks.css">
+
+    <script>
+        function applyInitialTheme() {
+            if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        }
+        applyInitialTheme();
+    </script>
+</head>
+<body class="bg-gradient-to-br from-slate-900 to-slate-700 min-h-screen flex flex-col items-center justify-start pt-8 sm:pt-10 p-2 sm:p-4 selection:bg-sky-400 selection:text-white dark:selection:bg-sky-600 dark:selection:text-white">
+
+    <div id="messageBox" class="message-box"></div>
+
+    <div id="addTaskModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 dark:bg-opacity-70 overflow-y-auto h-full w-full flex items-center justify-center hidden z-[150]"> <div class="relative mx-auto p-5 sm:p-6 border w-full max-w-lg shadow-xl rounded-xl bg-white dark:bg-slate-800 transform transition-all duration-300 ease-in-out scale-95 opacity-0" id="modalDialogAdd"> <div class="flex justify-between items-center pb-3 mb-4 border-b border-slate-200 dark:border-slate-700"> <h3 class="text-2xl font-semibold text-slate-800 dark:text-slate-100">Add New Item</h3> <button id="closeAddModalBtn" type="button" class="text-slate-400 hover:text-slate-600 dark:text-slate-300 dark:hover:text-slate-100 transition-colors p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700" aria-label="Close modal"> <i class="fas fa-times fa-lg"></i> </button> </div> 
+    
+    <form id="modalTodoFormAdd">
+        <div> <label for="modalTaskInputAdd"
+                class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Description <span
+                    class="input-example-text">(e.g., "Buy milk tomorrow", "Call John next Monday")</span></label> <input
+                type="text" id="modalTaskInputAdd" placeholder="Enter item description..."
+                class="w-full p-3 border-2 bg-white text-slate-900 placeholder-slate-400 border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition-shadow duration-300 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 dark:border-slate-600"
+                required> </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+            <div> <label for="modalDueDateInputAdd"
+                    class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Due Date (optional)</label>
+                <input type="date" id="modalDueDateInputAdd"
+                    class="w-full p-3 border-2 bg-white text-slate-900 border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600 dark:[color-scheme:dark]">
+            </div>
+            <div> <label for="modalTimeInputAdd"
+                    class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Time (optional)</label> <input
+                    type="time" id="modalTimeInputAdd"
+                    class="w-full p-3 border-2 bg-white text-slate-900 border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600 dark:[color-scheme:dark]">
+            </div>
+        </div>
+        <div class="mt-4"> <label for="modalPriorityInputAdd"
+                class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Priority</label> <select
+                id="modalPriorityInputAdd"
+                class="w-full p-3 border-2 bg-white text-slate-900 border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">
+                <option value="low">Low</option>
+                <option value="medium" selected>Medium</option>
+                <option value="high">High</option>
+            </select> </div>
+        <div class="mt-4 advanced-recurrence-element"> <label for="modalRecurrenceAdd"
+                class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Repeats</label> <select
+                id="modalRecurrenceAdd"
+                class="w-full p-3 border-2 bg-white text-slate-900 border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">
+                <option value="none" selected>Does not repeat</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="yearly">Yearly</option>
+            </select>
+            <div id="recurrenceOptionsAdd"
+                class="hidden mt-3 space-y-3 border-t border-slate-200 dark:border-slate-700 pt-3">
+                <div class="flex items-center gap-2"> <label for="recurrenceIntervalAdd"
+                        class="text-sm font-medium text-slate-700 dark:text-slate-300">Every</label> <input type="number"
+                        id="recurrenceIntervalAdd" value="1" min="1"
+                        class="w-20 p-2 border-2 bg-white text-slate-900 border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">
+                    <span id="recurrenceFrequencyTextAdd" class="text-sm text-slate-700 dark:text-slate-300">Days</span>
+                </div>
+                <div id="weeklyRecurrenceOptionsAdd" class="hidden space-x-2"> <span
+                        class="text-sm font-medium text-slate-700 dark:text-slate-300">on:</span> <label
+                        class="inline-flex items-center"><input type="checkbox" value="su" class="form-checkbox"> <span
+                            class="ml-1">S</span></label> <label class="inline-flex items-center"><input type="checkbox"
+                            value="mo" class="form-checkbox"> <span class="ml-1">M</span></label> <label
+                        class="inline-flex items-center"><input type="checkbox" value="tu" class="form-checkbox"> <span
+                            class="ml-1">T</span></label> <label class="inline-flex items-center"><input type="checkbox"
+                            value="we" class="form-checkbox"> <span class="ml-1">W</span></label> <label
+                        class="inline-flex items-center"><input type="checkbox" value="th" class="form-checkbox"> <span
+                            class="ml-1">T</span></label> <label class="inline-flex items-center"><input type="checkbox"
+                            value="fr" class="form-checkbox"> <span class="ml-1">F</span></label> <label
+                        class="inline-flex items-center"><input type="checkbox" value="sa" class="form-checkbox"> <span
+                            class="ml-1">S</span></label> </div>
+                <div class="flex items-center gap-2"> <label for="recurrenceEndDateAdd"
+                        class="text-sm font-medium text-slate-700 dark:text-slate-300">Until</label> <input type="date"
+                        id="recurrenceEndDateAdd"
+                        class="w-full p-2 border-2 bg-white text-slate-900 border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600 dark:[color-scheme:dark]">
+                </div>
+            </div>
+        </div>
+        <div class="mt-4"> <label for="modalLabelInputAdd"
+                class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Label (e.g., Work,
+                Personal)</label> <input type="text" id="modalLabelInputAdd" list="existingLabels"
+                placeholder="Type or select a label"
+                class="w-full p-3 border-2 bg-white text-slate-900 placeholder-slate-400 border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition-shadow duration-300 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 dark:border-slate-600">
+            <datalist id="existingLabels"></datalist> </div>
+        <div class="mt-4 flex items-center space-x-3 reminder-feature-element" id="modalRemindMeAddContainer"> <span
+                class="text-sm font-medium text-slate-700 dark:text-slate-300">Remind Me</span>
+            <div class="relative"> <input type="checkbox" id="modalRemindMeAdd" name="modalRemindMeAddToggle"
+                    class="toggle-checkbox" /> <label for="modalRemindMeAdd" class="toggle-label"></label> </div>
+        </div>
+        <div id="reminderOptionsAdd"
+            class="hidden mt-3 space-y-3 border-t border-slate-200 dark:border-slate-700 pt-3 reminder-feature-element">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div> <label for="modalReminderDateAdd"
+                        class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Reminder Date</label>
+                    <input type="date" id="modalReminderDateAdd"
+                        class="w-full p-3 border-2 bg-white text-slate-900 border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600 dark:[color-scheme:dark]">
+                </div>
+                <div> <label for="modalReminderTimeAdd"
+                        class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Reminder Time</label>
+                    <input type="time" id="modalReminderTimeAdd"
+                        class="w-full p-3 border-2 bg-white text-slate-900 border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600 dark:[color-scheme:dark]">
+                </div>
+            </div>
+            <div> <label for="modalReminderEmailAdd"
+                    class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email Address</label> <input
+                    type="email" id="modalReminderEmailAdd" placeholder="Enter email for reminder"
+                    class="w-full p-3 border-2 bg-white text-slate-900 placeholder-slate-400 border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition-shadow duration-300 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 dark:border-slate-600">
+            </div>
+        </div>
+        <div class="mt-4 flex items-center space-x-3">
+    <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Hide from Magic Mirror</span>
+    <div class="relative">
+        <input type="checkbox" id="modalHideFromMirrorAdd" class="toggle-checkbox"/>
+        <label for="modalHideFromMirrorAdd" class="toggle-label"></label>
+    </div>
+</div>
+        <div class="mt-4"> <label for="modalNotesInputAdd"
+                class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Notes</label> <textarea
+                id="modalNotesInputAdd" placeholder="Add any relevant notes..." rows="3"
+                class="w-full p-3 border-2 bg-white text-slate-900 placeholder-slate-400 border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition-shadow duration-300 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 dark:border-slate-600"></textarea>
+        </div>
+        <div class="mt-6 flex justify-end gap-3"> <button type="button" id="cancelAddModalBtn"
+                class="px-5 py-2.5 bg-slate-200 text-slate-800 rounded-lg hover:bg-slate-300 dark:bg-slate-600 dark:text-slate-200 dark:hover:bg-slate-500 transition-colors font-medium">Cancel</button>
+            <button type="submit"
+                class="px-5 py-2.5 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-colors font-semibold">Save
+                Item</button> </div>
+    </form>
+    </div>
+    </div>
+
+
+    <div id="viewEditTaskModal"
+        class="fixed inset-0 bg-gray-600 bg-opacity-50 dark:bg-opacity-70 overflow-y-auto h-full w-full flex items-center justify-center hidden z-[150]">
+        <div class="relative mx-auto p-5 sm:p-6 border w-full max-w-lg shadow-xl rounded-xl bg-white dark:bg-slate-800 transform transition-all duration-300 ease-in-out scale-95 opacity-0"
+            id="modalDialogViewEdit">
+            <div class="flex justify-between items-center pb-3 mb-4 border-b border-slate-200 dark:border-slate-700">
+                <h3 class="text-2xl font-semibold text-slate-800 dark:text-slate-100">Edit Item Details</h3> <button
+                    id="closeViewEditModalBtn" type="button"
+                    class="text-slate-400 hover:text-slate-600 dark:text-slate-300 dark:hover:text-slate-100 transition-colors p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"
+                    aria-label="Close modal"> <i class="fas fa-times fa-lg"></i> </button>
+            </div>
+            <form id="modalTodoFormViewEdit"> <input type="hidden" id="modalViewEditTaskId">
+                <div> <label for="modalTaskInputViewEdit"
+                        class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Description <span
+                            class="input-example-text">(e.g., "Buy milk tomorrow", "Call John next Monday")</span></label>
+                    <input type="text" id="modalTaskInputViewEdit" placeholder="e.g., Buy groceries"
+                        class="w-full p-3 border-2 bg-white text-slate-900 placeholder-slate-400 border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition-shadow duration-300 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 dark:border-slate-600"
+                        required> </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                    <div> <label for="modalDueDateInputViewEdit"
+                            class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Due Date</label>
+                        <input type="date" id="modalDueDateInputViewEdit"
+                            class="w-full p-3 border-2 bg-white text-slate-900 border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600 dark:[color-scheme:dark]">
+                    </div>
+                    <div> <label for="modalTimeInputViewEdit"
+                            class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Time</label> <input
+                            type="time" id="modalTimeInputViewEdit"
+                            class="w-full p-3 border-2 bg-white text-slate-900 border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600 dark:[color-scheme:dark]">
+                    </div>
+                </div>
+                <div class="mt-4"> <label for="modalPriorityInputViewEdit"
+                        class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Priority</label> <select
+                        id="modalPriorityInputViewEdit"
+                        class="w-full p-3 border-2 bg-white text-slate-900 border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                    </select> </div>
+                <div class="mt-4 advanced-recurrence-element"> <label for="modalRecurrenceViewEdit"
+                        class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Repeats</label> <select
+                        id="modalRecurrenceViewEdit"
+                        class="w-full p-3 border-2 bg-white text-slate-900 border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">
+                        <option value="none" selected>Does not repeat</option>
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="yearly">Yearly</option>
+                    </select>
+                    <div id="recurrenceOptionsViewEdit"
+                        class="hidden mt-3 space-y-3 border-t border-slate-200 dark:border-slate-700 pt-3">
+                        <div class="flex items-center gap-2"> <label for="recurrenceIntervalViewEdit"
+                                class="text-sm font-medium text-slate-700 dark:text-slate-300">Every</label> <input
+                                type="number" id="recurrenceIntervalViewEdit" value="1" min="1"
+                                class="w-20 p-2 border-2 bg-white text-slate-900 border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">
+                            <span id="recurrenceFrequencyTextViewEdit"
+                                class="text-sm text-slate-700 dark:text-slate-300">Days</span> </div>
+                        <div id="weeklyRecurrenceOptionsViewEdit" class="hidden space-x-2"> <span
+                                class="text-sm font-medium text-slate-700 dark:text-slate-300">on:</span> <label
+                                class="inline-flex items-center"><input type="checkbox" value="su" class="form-checkbox">
+                                <span class="ml-1">S</span></label> <label class="inline-flex items-center"><input
+                                    type="checkbox" value="mo" class="form-checkbox"> <span class="ml-1">M</span></label>
+                            <label class="inline-flex items-center"><input type="checkbox" value="tu" class="form-checkbox">
+                                <span class="ml-1">T</span></label> <label class="inline-flex items-center"><input
+                                    type="checkbox" value="we" class="form-checkbox"> <span class="ml-1">W</span></label>
+                            <label class="inline-flex items-center"><input type="checkbox" value="th" class="form-checkbox">
+                                <span class="ml-1">T</span></label> <label class="inline-flex items-center"><input
+                                    type="checkbox" value="fr" class="form-checkbox"> <span class="ml-1">F</span></label>
+                            <label class="inline-flex items-center"><input type="checkbox" value="sa" class="form-checkbox">
+                                <span class="ml-1">S</span></label> </div>
+                        <div class="flex items-center gap-2"> <label for="recurrenceEndDateViewEdit"
+                                class="text-sm font-medium text-slate-700 dark:text-slate-300">Until</label> <input
+                                type="date" id="recurrenceEndDateViewEdit"
+                                class="w-full p-2 border-2 bg-white text-slate-900 border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600 dark:[color-scheme:dark]">
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4"> <label for="modalLabelInputViewEdit"
+                        class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Label</label> <input
+                        type="text" id="modalLabelInputViewEdit" list="existingLabelsEdit"
+                        placeholder="Type or select a label"
+                        class="w-full p-3 border-2 bg-white text-slate-900 placeholder-slate-400 border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition-shadow duration-300 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 dark:border-slate-600">
+                    <datalist id="existingLabelsEdit"></datalist> </div>
+                <div class="mt-4 flex items-center space-x-3 reminder-feature-element" id="modalRemindMeViewEditContainer">
+                    <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Remind Me</span>
+                    <div class="relative"> <input type="checkbox" id="modalRemindMeViewEdit"
+                            name="modalRemindMeViewEditToggle" class="toggle-checkbox" /> <label for="modalRemindMeViewEdit"
+                            class="toggle-label"></label> </div>
+                </div>
+                <div id="reminderOptionsViewEdit"
+                    class="hidden mt-3 space-y-3 border-t border-slate-200 dark:border-slate-700 pt-3 reminder-feature-element">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div> <label for="modalReminderDateViewEdit"
+                                class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Reminder
+                                Date</label> <input type="date" id="modalReminderDateViewEdit"
+                                class="w-full p-3 border-2 bg-white text-slate-900 border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600 dark:[color-scheme:dark]">
+                        </div>
+                        <div> <label for="modalReminderTimeViewEdit"
+                                class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Reminder
+                                Time</label> <input type="time" id="modalReminderTimeViewEdit"
+                                class="w-full p-3 border-2 bg-white text-slate-900 border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600 dark:[color-scheme:dark]">
+                        </div>
+                    </div>
+                    <div> <label for="modalReminderEmailViewEdit"
+                            class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email Address</label>
+                        <input type="email" id="modalReminderEmailViewEdit" placeholder="Enter email for reminder"
+                            class="w-full p-3 border-2 bg-white text-slate-900 placeholder-slate-400 border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition-shadow duration-300 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 dark:border-slate-600">
+                    </div>
+                </div>
+                
+                <div class="mt-4 flex items-center space-x-3">
+                    <span class="text-sm font-medium text-slate-700 dark:text-slate-300">Hide from Magic Mirror</span>
+                    <div class="relative">
+                        <input type="checkbox" id="modalHideFromMirrorViewEdit" class="toggle-checkbox"/>
+                        <label for="modalHideFromMirrorViewEdit" class="toggle-label"></label>
+                    </div>
+                </div>
+
+                <div class="mt-4"> <label for="modalNotesInputViewEdit"
+                        class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Notes</label> <textarea
+                        id="modalNotesInputViewEdit" placeholder="Add any relevant notes..." rows="3"
+                        class="w-full p-3 border-2 bg-white text-slate-900 placeholder-slate-400 border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition-shadow duration-300 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 dark:border-slate-600"></textarea>
+                </div>
+                <div class="mt-6 flex justify-end gap-3"> <button type="button" id="cancelViewEditModalBtn"
+                        class="px-5 py-2.5 bg-slate-200 text-slate-800 rounded-lg hover:bg-slate-300 dark:bg-slate-600 dark:text-slate-200 dark:hover:bg-slate-500 transition-colors font-medium">Cancel</button>
+                    <button type="submit"
+                        class="px-5 py-2.5 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-colors font-semibold">Save
+                        Changes</button> </div>
+            </form>
+        </div>
+    </div>
+    <div id="viewTaskDetailsModal"
+        class="fixed inset-0 bg-gray-600 bg-opacity-50 dark:bg-opacity-70 overflow-y-auto h-full w-full flex items-center justify-center hidden z-[160]">
+        <div class="relative mx-auto p-5 sm:p-6 border w-full max-w-lg shadow-xl rounded-xl bg-white dark:bg-slate-800 transform transition-all duration-300 ease-in-out scale-95 opacity-0"
+            id="modalDialogViewDetails">
+            <div class="flex justify-between items-center pb-3 mb-4 border-b border-slate-200 dark:border-slate-700">
+                <h3 class="text-2xl font-semibold text-slate-800 dark:text-slate-100">Item Information</h3> <button
+                    id="closeViewDetailsModalBtn" type="button"
+                    class="text-slate-400 hover:text-slate-600 dark:text-slate-300 dark:hover:text-slate-100 transition-colors p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"
+                    aria-label="Close modal"> <i class="fas fa-times fa-lg"></i> </button>
+            </div>
+            <div class="space-y-4 text-sm text-slate-700 dark:text-slate-300">
+                <div> <strong class="view-details-heading block mb-0.5">Description:</strong>
+                    <p id="viewTaskText" class="break-all"></p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+                    <div> <strong class="view-details-heading block mb-0.5">Due Date:</strong>
+                        <p id="viewTaskDueDate"></p>
+                    </div>
+                    <div> <strong class="view-details-heading block mb-0.5">Time:</strong>
+                        <p id="viewTaskTime"></p>
+                    </div>
+                </div>
+                <div
+                    class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
+                    <div> <strong class="view-details-heading block mb-0.5">Priority:</strong>
+                        <p id="viewTaskPriority" class="capitalize"></p>
+                    </div>
+                    <div> <strong class="view-details-heading block mb-0.5">Status:</strong>
+                        <p id="viewTaskStatus" class="capitalize"></p>
+                    </div>
+                </div>
+                <div> <strong class="view-details-heading block mb-0.5">Label:</strong>
+                    <p id="viewTaskLabel" class="capitalize"></p>
+                </div>
+                <div> <strong class="view-details-heading block mb-0.5">Notes:</strong>
+                    <p id="viewTaskNotes" class="mt-1 break-all whitespace-pre-wrap"></p>
+                </div>
+                <div id="viewTaskReminderSection"
+                    class="border-t border-slate-200 dark:border-slate-700 pt-3 mt-3 space-y-2 reminder-feature-element">
+                    <div> <strong class="view-details-heading block mb-0.5">Reminder:</strong>
+                        <p id="viewTaskReminderStatus"></p>
+                    </div>
+                    <div id="viewTaskReminderDetails" class="hidden space-y-2">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4">
+                            <div> <strong class="view-details-heading block mb-0.5">Reminder Date:</strong>
+                                <p id="viewTaskReminderDate"></p>
+                            </div>
+                            <div> <strong class="view-details-heading block mb-0.5">Reminder Time:</strong>
+                                <p id="viewTaskReminderTime"></p>
+                            </div>
+                        </div>
+                        <div> <strong class="view-details-heading block mb-0.5">Reminder Email:</strong>
+                            <p id="viewTaskReminderEmail"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end gap-3"> <button type="button" id="editFromViewModalBtn"
+                    class="px-5 py-2.5 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-colors font-semibold">Edit
+                    Item</button> <button type="button" id="deleteFromViewModalBtn"
+                    class="px-5 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold">Delete
+                    Item</button> <button type="button" id="closeViewDetailsSecondaryBtn"
+                    class="px-5 py-2.5 bg-slate-200 text-slate-800 rounded-lg hover:bg-slate-300 dark:bg-slate-600 dark:text-slate-200 dark:hover:bg-slate-500 transition-colors font-medium">Close</button>
+            </div>
+        </div>
+    </div>
+    <div id="manageLabelsModal"
+        class="fixed inset-0 bg-gray-600 bg-opacity-50 dark:bg-opacity-70 overflow-y-auto h-full w-full flex items-center justify-center hidden z-[187]">
+        <div class="relative mx-auto p-5 sm:p-6 border w-full max-w-md shadow-xl rounded-xl bg-white dark:bg-slate-800 transform transition-all duration-300 ease-in-out scale-95 opacity-0"
+            id="modalDialogManageLabels">
+            <div class="flex justify-between items-center pb-3 mb-4 border-b border-slate-200 dark:border-slate-700">
+                <h3 class="text-2xl font-semibold text-slate-800 dark:text-slate-100">Manage Labels</h3> <button
+                    id="closeManageLabelsModalBtn" type="button"
+                    class="text-slate-400 hover:text-slate-600 dark:text-slate-300 dark:hover:text-slate-100 transition-colors p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"
+                    aria-label="Close modal"> <i class="fas fa-times fa-lg"></i> </button>
+            </div>
+            <form id="addNewLabelForm" class="flex gap-2 mb-4"> <input type="text" id="newLabelInput"
+                    placeholder="New label name"
+                    class="flex-grow p-2.5 border-2 bg-white text-slate-900 placeholder-slate-400 border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 dark:border-slate-600">
+                <button type="submit"
+                    class="bg-sky-500 hover:bg-sky-600 text-white font-semibold p-2.5 rounded-lg shadow-md">Add</button>
+            </form>
+            <h4 class="text-lg font-medium text-slate-700 dark:text-slate-200 mb-2">Existing Labels:</h4>
+            <ul id="existingLabelsList" class="max-h-60 overflow-y-auto space-y-1 pr-1"> </ul>
+            <div class="mt-6 flex justify-end"> <button type="button" id="closeManageLabelsSecondaryBtn"
+                    class="px-5 py-2.5 bg-slate-200 text-slate-800 rounded-lg hover:bg-slate-300 dark:bg-slate-600 dark:text-slate-200 dark:hover:bg-slate-500 transition-colors font-medium">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="settingsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 dark:bg-opacity-70 overflow-y-auto h-full w-full flex items-center justify-center hidden z-[180]">
+        <div class="relative mx-auto p-5 sm:p-6 border w-full max-w-md shadow-xl rounded-xl bg-white dark:bg-slate-800 transform transition-all duration-300 ease-in-out scale-95 opacity-0" id="modalDialogSettings">
+            <div class="flex justify-between items-center pb-3 mb-4 border-b border-slate-200 dark:border-slate-700">
+                <h3 class="text-2xl font-semibold text-slate-800 dark:text-slate-100">Settings</h3>
+                <button id="closeSettingsModalBtn" type="button" class="text-slate-400 hover:text-slate-600 dark:text-slate-300 dark:hover:text-slate-100 transition-colors p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700" aria-label="Close modal">
+                    <i class="fas fa-times fa-lg"></i>
+                </button>
+            </div>
+            <div id="settingsContent" class="space-y-3">
+                <button id="settingsClearCompletedBtn" type="button" class="settings-modal-button bg-red-50 hover:bg-red-100 text-red-700 dark:bg-red-900/50 dark:hover:bg-red-800/70 dark:text-red-300"> <i class="fas fa-eraser"></i> Clear Completed Items </button>
+                <button id="settingsManageLabelsBtn" type="button" class="settings-modal-button bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:hover:bg-indigo-800/70 dark:text-indigo-300"> <i class="fas fa-tags"></i> Manage Labels </button>
+                <button id="settingsManageSmartViewsBtn" type="button" class="settings-modal-button bg-purple-50 hover:bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:hover:bg-purple-800/70 dark:text-purple-300"> <i class="fas fa-list-alt"></i> Manage Smart Views </button>
+                <button id="settingsManageNotificationsBtn" type="button" class="settings-modal-button bg-lime-50 hover:bg-lime-100 text-lime-700 dark:bg-lime-900/50 dark:hover:bg-lime-800/70 dark:text-lime-300 desktop-notifications-feature-element hidden"> <i class="fas fa-bell-on"></i> Manage Notifications </button>
+                <button id="settingsManageRemindersBtn" type="button" class="settings-modal-button bg-teal-50 hover:bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:hover:bg-teal-800/70 dark:text-teal-300 reminder-feature-element"> <i class="fas fa-bell"></i> Manage Reminders </button>
+                </div>
+            <div class="mt-6 flex justify-end"> <button type="button" id="closeSettingsSecondaryBtn" class="px-5 py-2.5 bg-slate-200 text-slate-800 rounded-lg hover:bg-slate-300 dark:bg-slate-600 dark:text-slate-200 dark:hover:bg-slate-500 transition-colors font-medium">Close</button> </div>
+        </div>
+    </div>
+
+    <div id="manageSmartViewsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 dark:bg-opacity-70 overflow-y-auto h-full w-full flex items-center justify-center hidden z-[188]">
+        <div class="relative mx-auto p-5 sm:p-6 border w-full max-w-lg shadow-xl rounded-xl bg-white dark:bg-slate-800 transform transition-all duration-300 ease-in-out scale-95 opacity-0" id="modalDialogManageSmartViews">
+            <div class="flex justify-between items-center pb-3 mb-4 border-b border-slate-200 dark:border-slate-700">
+                <h3 class="text-2xl font-semibold text-slate-800 dark:text-slate-100">Manage Smart Views</h3>
+                <button id="closeManageSmartViewsModalBtn" type="button" class="text-slate-400 hover:text-slate-600 dark:text-slate-300 dark:hover:text-slate-100 transition-colors p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700" aria-label="Close modal">
+                    <i class="fas fa-times fa-lg"></i>
+                </button>
+            </div>
+            
+            <form id="addNewSmartViewForm" class="flex flex-col gap-3 mb-6 bg-slate-50 dark:bg-slate-700/50 p-4 rounded-lg">
+                <h4 class="text-md font-semibold text-slate-700 dark:text-slate-200">Create New Smart View</h4>
+                
+                <div class="flex gap-2">
+                    <input type="text" id="newSmartViewNameInput" placeholder="View Name (e.g., Errands)" class="flex-grow p-2.5 border-2 bg-white text-slate-900 placeholder-slate-400 border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 dark:border-slate-600" required>
+                    
+                    <select id="newSmartViewIconInput" class="p-2.5 border-2 bg-white text-slate-900 border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600 cursor-pointer" required>
+                        <option value="fas fa-hashtag"># Hashtag</option>
+                        <option value="fas fa-star">⭐ Star</option>
+                        <option value="fas fa-shopping-cart"> Shopping Cart</option> <option value="fas fa-server">️ Server</option>           <option value="fab fa-amazon"> Amazon</option>            <option value="fas fa-car"> Car</option>
+                        <option value="fas fa-home"> Home</option>
+                        <option value="fas fa-heart">❤️ Heart</option>
+                        <option value="fas fa-plane">✈️ Plane</option>
+                        <option value="fas fa-book"> Book</option>
+                        <option value="fas fa-dumbbell"> Dumbbell</option>
+                        <option value="fas fa-utensils"> Food</option>
+                        <option value="fas fa-dog"> Pet</option>
+                    </select>
+                </div>
+
+                <div class="flex gap-2">
+                    <input type="text" id="newSmartViewLabelInput" list="existingLabelsSmartView" placeholder="Target Label (e.g., errands)" class="flex-grow p-2.5 border-2 bg-white text-slate-900 placeholder-slate-400 border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 dark:border-slate-600" required>
+                    <datalist id="existingLabelsSmartView"></datalist>
+                    <button type="submit" class="bg-sky-500 hover:bg-sky-600 text-white font-semibold p-2.5 rounded-lg shadow-md whitespace-nowrap">Add View</button>
+                </div>
+            </form>
+            
+            <h4 class="text-lg font-medium text-slate-700 dark:text-slate-200 mb-2">Your Custom Views:</h4>
+            <ul id="existingSmartViewsList" class="max-h-60 overflow-y-auto space-y-2 pr-1">
+                </ul>
+            
+            <div class="mt-6 flex justify-end">
+                <button type="button" id="closeManageSmartViewsSecondaryBtn" class="px-5 py-2.5 bg-slate-200 text-slate-800 rounded-lg hover:bg-slate-300 dark:bg-slate-600 dark:text-slate-200 dark:hover:bg-slate-500 transition-colors font-medium">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="desktopNotificationsSettingsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 dark:bg-opacity-70 overflow-y-auto h-full w-full flex items-center justify-center hidden z-[185]">
+        <div id="modalDialogDesktopNotificationsSettings" class="relative mx-auto p-5 sm:p-6 border w-full max-w-lg shadow-xl rounded-xl bg-white dark:bg-slate-800 transform transition-all duration-300 ease-in-out scale-95 opacity-0">
+            <div class="flex justify-between items-center pb-3 mb-4 border-b border-slate-200 dark:border-slate-700">
+                <h3 class="text-2xl font-semibold text-slate-800 dark:text-slate-100">Notification Settings</h3>
+                <button id="closeDesktopNotificationsSettingsModalBtn" type="button" class="text-slate-400 hover:text-slate-600 dark:text-slate-300 dark:hover:text-slate-100 transition-colors p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700" aria-label="Close modal">
+                    <i class="fas fa-times fa-lg"></i>
+                </button>
+            </div>
+            <div id="notificationSettingsContentArea" class="space-y-4">
+                <p id="notificationPermissionStatusText" class="text-sm text-center p-2 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300"></p>
+
+                <div class="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-700/50">
+                    <label for="enableNotificationsToggle" class="font-medium text-slate-700 dark:text-slate-200">Enable App Notifications</label>
+                    <div class="relative">
+                        <input type="checkbox" id="enableNotificationsToggle" class="toggle-checkbox">
+                        <label for="enableNotificationsToggle" class="toggle-label"></label>
+                    </div>
+                </div>
+
+                <div class="space-y-3 pt-3 border-t border-slate-200 dark:border-slate-700">
+                    <div class="flex items-center justify-between">
+                        <label for="notifyOnTaskDueToggle" class="font-medium text-slate-700 dark:text-slate-300">Notify when a task is due</label>
+                         <div class="relative">
+                             <input type="checkbox" id="notifyOnTaskDueToggle" class="toggle-checkbox">
+                             <label for="notifyOnTaskDueToggle" class="toggle-label"></label>
+                         </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <label for="notifyMinutesBeforeDue" class="text-sm text-slate-600 dark:text-slate-400">Notify minutes before due</label>
+                        <input type="number" id="notifyMinutesBeforeDue" value="5" min="0" class="w-24 p-2 border-2 bg-white text-slate-900 border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">
+                    </div>
+                    <div class="flex flex-col gap-2 pt-3 border-t border-slate-200 dark:border-slate-700">
+                    <label for="homeAssistantWebhookInput" class="font-medium text-slate-700 dark:text-slate-300">Home Assistant Webhook URL</label>
+                     <input type="text" id="homeAssistantWebhookInput" placeholder="http://homeassistant.local:8123/api/webhook/..." class="w-full p-2 border-2 bg-white text-slate-900 placeholder-slate-400 border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">
+                     <p class="text-xs text-slate-500 dark:text-slate-400">Optional: Paste your HA webhook URL here to receive mobile notifications.</p>
+                    <button id="testPhoneNotificationBtn" type="button" class="mt-3 w-full px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-md font-medium transition-colors flex items-center justify-center gap-2">
+            <i class="fas fa-mobile-alt"></i>
+            <span>Test Phone Notification</span>
+        </button> 
+                    </div>
+                </div>
+                 <div class="pt-4 border-t border-slate-200 dark:border-slate-700">
+                      <button id="testNotificationBtn" type="button" class="w-full settings-modal-button bg-sky-50 hover:bg-sky-100 text-sky-700 dark:bg-sky-900/50 dark:hover:bg-sky-800/70 dark:text-sky-300 justify-center">
+                          <i class="fas fa-paper-plane"></i> Send Test Notification
+                      </button>
+                 </div>
+            </div>
+             <div class="mt-6 flex justify-end">
+                <button type="button" id="closeDesktopNotificationsSettingsSecondaryBtn" class="px-5 py-2.5 bg-slate-200 text-slate-800 rounded-lg hover:bg-slate-300 dark:bg-slate-600 dark:text-slate-200 dark:hover:bg-slate-500 transition-colors font-medium">Done</button>
+            </div>
+        </div>
+    </div>
+    <div id="featureFlagsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 dark:bg-opacity-70 overflow-y-auto h-full w-full flex items-center justify-center hidden z-[190]"> <div class="relative mx-auto p-5 sm:p-6 border w-full max-w-md shadow-xl rounded-xl bg-white dark:bg-slate-800 transform transition-all duration-300 ease-in-out scale-95 opacity-0" id="modalDialogFeatureFlags"> <div class="flex justify-between items-center pb-3 mb-4 border-b border-slate-200 dark:border-slate-700"> <h3 class="text-2xl font-semibold text-slate-800 dark:text-slate-100">Manage Feature Flags</h3> <button id="closeFeatureFlagsModalBtn" type="button" class="text-slate-400 hover:text-slate-600 dark:text-slate-300 dark:hover:text-slate-100 transition-colors p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700" aria-label="Close modal"> <i class="fas fa-times fa-lg"></i> </button> </div> <div id="featureFlagsListContainer" class="space-y-2"> </div> <div class="mt-6 flex justify-end"> <button type="button" id="closeFeatureFlagsSecondaryBtn" class="px-5 py-2.5 bg-slate-200 text-slate-800 rounded-lg hover:bg-slate-300 dark:bg-slate-600 dark:text-slate-200 dark:hover:bg-slate-500 transition-colors font-medium">Done</button> </div> </div> </div>
+
+    <div class="text-center mb-6">
+        <h1 class="text-4xl md:text-5xl font-bold text-white">My Todo List</h1>
+    </div>
+
+    <div class="w-full max-w-6xl mx-auto flex-grow">
+        <div class="flex flex-col md:flex-row gap-6 lg:gap-8 h-full">
+<aside id="taskSidebar" class="bg-slate-100 dark:bg-slate-800 rounded-xl shadow-xl flex-shrink-0 md:sticky md:top-10 md:self-start sticky-sidebar w-full md:w-72 lg:w-80 p-3 sm:p-4 md:p-5 flex flex-col max-h-[85vh] overflow-y-auto">                <div class="flex justify-between items-center mb-4">
+                    <div class="flex items-center gap-3">
+                        <a href="index.html" class="text-slate-400 hover:text-white" title="Go to Home">
+                           <i class="fas fa-home text-xl"></i>
+                        </a>
+                        <h1 class="sidebar-text-content text-xl md:text-2xl font-bold text-slate-800 dark:text-slate-100">Menu</h1>
+                    </div>
+                    <button id="sidebarToggleBtn" class="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" title="Toggle Sidebar">
+                        <i id="sidebarToggleIcon" class="fas fa-chevron-left"></i>
+                    </button>
+                </div>
+
+                <div class="flex-grow">
+                    <div class="flex flex-col gap-3 mb-4">
+                        <button id="openAddModalButton" class="w-full px-4 py-3 bg-sky-500 hover:bg-sky-600 text-white rounded-lg font-semibold transition-colors flex items-center justify-center sidebar-button-icon-only">
+                            <i class="fas fa-plus md:mr-2.5"></i> <span class="sidebar-text-content">Add New Task</span>
+                        </button>
+                    </div>
+
+                    <div id="taskSearchInputContainer" class="mt-4">
+                        <h2 class="sidebar-text-content text-lg md:text-xl font-semibold text-slate-700 dark:text-slate-200 mb-2">Search Tasks</h2>
+                        <input type="text" id="taskSearchInput" placeholder="Search items..." class="w-full p-2.5 border-2 border-slate-200 dark:border-slate-700 rounded-lg dark:bg-slate-800 dark:text-slate-200 dark:placeholder-slate-400 focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition-shadow">
+                    </div>
+
+                    <h2 class="sidebar-text-content text-lg md:text-xl font-semibold text-slate-700 dark:text-slate-200 mb-2 mt-4">Smart Views</h2>
+                    <div id="smartViewButtonsContainer" class="flex flex-col gap-1">
+                        <button data-filter="inbox" class="smart-view-btn w-full px-3 py-1.5 md:px-3 md:py-2 rounded-lg transition-colors duration-300 flex items-center justify-center sidebar-button-icon-only">
+                            <i class="fas fa-inbox md:mr-2.5"></i> <span class="sidebar-text-content">Inbox</span>
+                        </button>
+                        <button data-filter="today" class="smart-view-btn w-full px-3 py-1.5 md:px-3 md:py-2 rounded-lg transition-colors duration-300 flex items-center justify-center sidebar-button-icon-only">
+                            <i class="fas fa-calendar-day md:mr-2.5"></i> <span class="sidebar-text-content">Today</span>
+                        </button>
+                        <button data-filter="upcoming" class="smart-view-btn w-full px-3 py-1.5 md:px-3 md:py-2 rounded-lg transition-colors duration-300 flex items-center justify-center sidebar-button-icon-only">
+                            <i class="fas fa-calendar-alt md:mr-2.5"></i> <span class="sidebar-text-content">Upcoming</span>
+                        </button>
+                         <button data-filter="shopping_list" class="smart-view-btn w-full px-3 py-1.5 md:px-3 md:py-2 rounded-lg transition-colors duration-300 flex items-center justify-center sidebar-button-icon-only shopping-list-feature-element">
+                             <i class="fas fa-shopping-cart md:mr-2.5"></i> <span class="sidebar-text-content">Shopping List</span>
+                         </button>
+                         <button data-filter="work" class="smart-view-btn w-full px-3 py-1.5 md:px-3 md:py-2 rounded-lg transition-colors duration-300 flex items-center justify-center sidebar-button-icon-only work-feature-element">
+                            <i class="fas fa-briefcase md:mr-2.5"></i> <span class="sidebar-text-content">Work</span>
+                        </button>
+                        
+                        <button data-filter="completed" class="smart-view-btn w-full px-3 py-1.5 md:px-3 md:py-2 rounded-lg transition-colors duration-300 flex items-center justify-center sidebar-button-icon-only">
+                            <i class="fas fa-check-double md:mr-2.5"></i> <span class="sidebar-text-content">Completed</span>
+                        </button>
+                    </div>
+
+                </div>
+
+                <div class="mt-auto pt-4">
+                     <h2 class="sidebar-text-content sidebar-section-title text-lg md:text-xl font-semibold text-slate-700 dark:text-slate-200 mb-2 md:mb-3 mt-4">Settings</h2>
+                    <button id="openSettingsModalButton" class="w-full px-4 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 rounded-lg font-medium transition-colors flex items-center justify-center sidebar-button-icon-only">
+                        <i class="fas fa-cog md:mr-2.5"></i> <span class="sidebar-text-content">Settings</span>
+                    </button>
+                </div>
+            </aside>
+            <main class="w-full flex-grow bg-white dark:bg-slate-900 p-4 md:p-6 lg:p-8 rounded-xl shadow-2xl min-h-[300px] mt-4 md:mt-0">
+                <div class="flex flex-col sm:flex-row justify-between items-center mb-4 md:mb-6">
+                    <div class="flex items-baseline gap-3">
+                        <h2 id="yourTasksHeading" class="text-xl sm:text-2xl md:text-3xl font-semibold text-slate-800 dark:text-slate-100">Your Items</h2>
+                        <span id="mainContentDate" class="text-base font-medium text-slate-500 dark:text-slate-400 hidden sm:block"></span>
+                    </div>
+                    <div class="flex-shrink-0 flex gap-2 mt-4 sm:mt-0">
+                        <button id="sortByDueDateBtn" class="sort-btn px-4 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200" title="Sort by due date">
+                            <i class="fas fa-sort-amount-down"></i>
+                            <span>Due Date</span>
+                        </button>
+                        <button id="sortByPriorityBtn" class="sort-btn px-4 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200" title="Sort by priority">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span>Priority</span>
+                        </button>
+                        <button id="sortByLabelBtn" class="sort-btn px-4 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200" title="Sort by label">
+                            <i class="fas fa-tag"></i>
+                            <span>Label</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="bulkActionControlsContainer" class="hidden">
+                </div>
+
+                <ul id="taskList" class="space-y-3">
+                    </ul>
+                <div id="emptyState" class="text-center py-10 hidden">
+                    <i class="fas fa-check-circle text-5xl text-green-500"></i>
+                    <h3 class="mt-4 text-xl font-semibold text-slate-700 dark:text-slate-200">You're all caught up!</h3>
+                    <p class="text-slate-500 dark:text-slate-400">Add a new item to get started.</p>
+                </div>
+                <div id="noMatchingTasks" class="text-center py-10 hidden">
+                    <i class="fas fa-search text-5xl text-slate-400"></i>
+                    <h3 class="mt-4 text-xl font-semibold text-slate-700 dark:text-slate-200">No matching items</h3>
+                    <p class="text-slate-500 dark:text-slate-400">Try a different filter or search term.</p>
+                </div>
+            </main>
+        </div>
+    </div>
+    <div id="criticalErrorDisplay" class="hidden fixed bottom-0 left-0 right-0 bg-red-700 dark:bg-red-800 text-white p-4 text-center z-[300] shadow-2xl transition-all duration-300 ease-in-out transform translate-y-full">
+    </div>
+
+    <footer class="text-center text-slate-400 dark:text-slate-500 mt-10 sm:mt-12 mb-6 text-sm">
+        <p>LockieMedia &copy; 2026</p>
+    </footer>
+
+    <script src="utils.js" type="module"></script>
+    <script src="eventBus.js" type="module"></script>
+    <script src="store.js" type="module"></script>
+    <script src="modalStateService.js" type="module"></script>
+    <script src="taskService.js" type="module"></script>
+    <script src="labelService.js" type="module"></script>
+    <script src="viewManager.js" type="module"></script>
+    <script src="notificationService.js" type="module"></script>
+    <script src="themeManager.js" type="module"></script>
+    <script src="feature_reminder.js" type="module"></script>
+    <script src="feature_advanced_recurrence.js" type="module"></script>
+    <script src="feature_shopping_list.js" type="module"></script>
+    <script src="feature_desktop_notifications.js" type="module"></script>
+
+    <script src="tasks_list_view.js" type="module"></script>
+    <script src="tasks_ui_rendering.js" type="module"></script>
+    <script src="tasks_modal_interactions.js" type="module"></script>
+    <script src="tasks_form_handlers.js" type="module"></script>
+    <script src="tasks_modal_events.js" type="module"></script>
+    <script src="tasks_ui_event_handlers.js" type="module"></script>
+
+    <script src="tasks_main.js" type="module"></script>
+</body>
+</html>
