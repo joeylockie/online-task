@@ -14,7 +14,6 @@ import { DesktopNotificationsFeature } from './feature_desktop_notifications.js'
 import * as uiRendering from './tasks_ui_rendering.js';
 import { refreshTaskView } from './tasks_ui_rendering.js';
 import * as ModalInteractions from './tasks_modal_interactions.js';
-import TimeTrackerService from './timeTrackerService.js';
 
 // NEW: Import our custom smart views feature!
 import { CustomSmartViewsFeature } from './feature_custom_smart_views.js';
@@ -89,12 +88,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else {
         LoggingService.critical('[TasksMain] AppStore.initializeStore is not available. Cannot load data.', new Error('DataLoadFailed'));
         return;
-    }
-
-    // Initialize the time tracker service to enable background automations globally
-    if (TimeTrackerService && typeof TimeTrackerService.initialize === 'function') {
-        TimeTrackerService.initialize();
-        LoggingService.info("[TasksMain] TimeTrackerService initialized for background automations.");
     }
 
     // Phase 3: Initialize all feature modules relevant to the Task Manager
