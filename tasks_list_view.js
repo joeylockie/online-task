@@ -8,7 +8,6 @@ import EventBus from './eventBus.js';
 import { formatDate, formatTime } from './utils.js';
 import { openViewTaskDetailsModal } from './tasks_modal_interactions.js';
 
-// DOM elements are now imported from the tasks-specific rendering module.
 import {
     taskList,
     emptyState,
@@ -16,11 +15,8 @@ import {
     populateDatalist
 } from './tasks_ui_rendering.js';
 
-/**
- * Renders the main list of tasks based on current filters, sort order, and search term.
- */
 export function renderTaskListView() {
-    if (!taskList || !ViewManager || !AppStore || typeof window.isFeatureEnabled !== 'function' || !TaskService) {
+    if (!taskList || !ViewManager || !AppStore || !TaskService) {
         console.error("renderTaskListView: Core dependencies not found.");
         return;
     }
@@ -44,23 +40,19 @@ export function renderTaskListView() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Core feature labels
     const shoppingLabels = ['shopping', 'buy', 'store'];
     const workLabels = ['work']; 
 
-    // NEW: Get custom smart view labels
     const prefs = AppStore.getUserPreferences();
     const customViews = prefs.customSmartViews || [];
     const customLabels = customViews.map(v => v.label.toLowerCase());
 
     if (currentFilterVal === 'inbox') {
-        // MODIFIED: Exclude Shopping, Work, AND Custom Smart Views from Inbox
         filteredTasks = currentTasks.filter(task => {
             if (task.completed) return false;
-            if (!task.label) return true; // Keep tasks with no label
+            if (!task.label) return true; 
             
             const taskLabel = task.label.toLowerCase();
-            // Hide task if it belongs to shopping, work, or ANY custom smart view
             if (shoppingLabels.includes(taskLabel)) return false;
             if (workLabels.includes(taskLabel)) return false;
             if (customLabels.includes(taskLabel)) return false;
@@ -92,7 +84,7 @@ export function renderTaskListView() {
             return taskDueDate.getTime() > today.getTime();
         });
     } else if (currentFilterVal === 'completed') {
-        const sixtyDaysAgoMs = Date.now() - (60 * 24 * 60 * 60 * 1000); // 60 days in milliseconds
+        const sixtyDaysAgoMs = Date.now() - (60 * 24 * 60 * 60 * 1000); 
         
         filteredTasks = currentTasks.filter(task => {
             if (!task.completed) return false;
@@ -100,11 +92,9 @@ export function renderTaskListView() {
             return true;
         });
     } else { 
-        // Fallback: This automatically handles all your custom smart views!
         filteredTasks = currentTasks.filter(task => task.label && task.label.toLowerCase() === currentFilterVal.toLowerCase() && !task.completed);
     }
 
-    // Apply Search Term
     if (currentSearchTermVal) {
         const searchTermLower = currentSearchTermVal.toLowerCase();
         filteredTasks = filteredTasks.filter(task =>
@@ -114,7 +104,6 @@ export function renderTaskListView() {
         );
     }
 
-    // Apply Sorting
     const priorityOrder = { high: 1, medium: 2, low: 3, default: 4 };
     if (currentSortVal === 'dueDate') {
         filteredTasks.sort((a, b) => {
@@ -144,12 +133,10 @@ export function renderTaskListView() {
         filteredTasks.sort((a, b) => (b.creationDate || b.id) - (a.creationDate || a.id));
     }
 
-    // Handle Empty States
     if (emptyState) emptyState.classList.toggle('hidden', currentTasks.length !== 0);
     if (noMatchingTasks) noMatchingTasks.classList.toggle('hidden', !(currentTasks.length > 0 && filteredTasks.length === 0));
     if (taskList) taskList.classList.toggle('hidden', filteredTasks.length === 0 && currentTasks.length > 0);
 
-    // Render Tasks
     filteredTasks.forEach((task) => {
         const li = document.createElement('li');
         li.className = `task-item flex items-start justify-between bg-slate-100 dark:bg-slate-700 p-3 sm:p-3.5 rounded-lg shadow hover:shadow-md transition-shadow duration-300 ${task.completed ? 'opacity-60' : ''} overflow-hidden`;
@@ -201,14 +188,14 @@ export function renderTaskListView() {
             dDS.innerHTML = `<i class="far fa-calendar-alt mr-1"></i> ${dD}`;
             detailsContainer.appendChild(dDS);
         }
-        if (window.isFeatureEnabled('advancedRecurrence') && task.recurrence && task.recurrence.frequency && task.recurrence.frequency !== 'none') {
+        
+        if (task.recurrence && task.recurrence.frequency && task.recurrence.frequency !== 'none') {
             const recurrenceIcon = document.createElement('span');
             recurrenceIcon.className = 'text-slate-400 dark:text-slate-500 flex items-center advanced-recurrence-element';
             recurrenceIcon.innerHTML = `<i class="fas fa-sync-alt" title="This task repeats"></i>`;
             detailsContainer.appendChild(recurrenceIcon);
         }
 
-        // --- RENDER COMPLETION TIMESTAMP ---
         if (task.completed && task.completedDate) {
             const compDateObj = new Date(task.completedDate);
             const dateStr = compDateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });

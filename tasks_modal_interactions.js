@@ -83,26 +83,24 @@ export function openViewEditModal(taskId) {
     
     populateDatalist(document.getElementById('existingLabelsEdit'));
     
-    if (AdvancedRecurrenceFeature?.updateRecurrenceUI) {
-        const recurrenceOptions = task.recurrence || {};
-        const modalRecurrenceViewEditEl = document.getElementById('modalRecurrenceViewEdit');
-        modalRecurrenceViewEditEl.value = recurrenceOptions.frequency || 'none';
-        document.getElementById('recurrenceIntervalViewEdit').value = recurrenceOptions.interval || 1;
-        document.getElementById('recurrenceEndDateViewEdit').value = recurrenceOptions.endDate || '';
-        
-        const checkboxes = document.querySelectorAll('#weeklyRecurrenceOptionsViewEdit input[type="checkbox"]');
-        checkboxes.forEach(cb => {
-            cb.checked = recurrenceOptions.daysOfWeek?.includes(cb.value) || false;
-        });
+    const recurrenceOptions = task.recurrence || {};
+    const modalRecurrenceViewEditEl = document.getElementById('modalRecurrenceViewEdit');
+    modalRecurrenceViewEditEl.value = recurrenceOptions.frequency || 'none';
+    document.getElementById('recurrenceIntervalViewEdit').value = recurrenceOptions.interval || 1;
+    document.getElementById('recurrenceEndDateViewEdit').value = recurrenceOptions.endDate || '';
+    
+    const checkboxes = document.querySelectorAll('#weeklyRecurrenceOptionsViewEdit input[type="checkbox"]');
+    checkboxes.forEach(cb => {
+        cb.checked = recurrenceOptions.daysOfWeek?.includes(cb.value) || false;
+    });
 
-        AdvancedRecurrenceFeature.updateRecurrenceUI(
-            modalRecurrenceViewEditEl,
-            document.getElementById('recurrenceOptionsViewEdit'),
-            document.getElementById('recurrenceIntervalViewEdit'),
-            document.getElementById('recurrenceFrequencyTextViewEdit'),
-            document.getElementById('weeklyRecurrenceOptionsViewEdit')
-        );
-    }
+    AdvancedRecurrenceFeature.updateRecurrenceUI(
+        modalRecurrenceViewEditEl,
+        document.getElementById('recurrenceOptionsViewEdit'),
+        document.getElementById('recurrenceIntervalViewEdit'),
+        document.getElementById('recurrenceFrequencyTextViewEdit'),
+        document.getElementById('weeklyRecurrenceOptionsViewEdit')
+    );
 
     const viewEditTaskModalEl = document.getElementById('viewEditTaskModal');
     const modalDialogViewEditEl = document.getElementById('modalDialogViewEdit');

@@ -9,17 +9,11 @@ import EventBus from './eventBus.js';
 import LoggingService from './loggingService.js';
 import { clearTempSubTasksForAddModal, tempSubTasksForAddModal } from './tasks_ui_event_handlers.js';
 
-// Import UI and Modal functions from their new tasks-specific locations
 import {
     closeAddModal,
     closeViewEditModal
 } from './tasks_modal_interactions.js';
 import { refreshTaskView } from './tasks_ui_rendering.js';
-
-// A local helper function to use, since the global one is in main.js
-function isFeatureEnabled(featureName) {
-    return window.isFeatureEnabled(featureName);
-}
 
 export async function handleAddTaskFormSubmit(event) {
     const functionName = 'handleAddTaskFormSubmit';
@@ -33,12 +27,7 @@ export async function handleAddTaskFormSubmit(event) {
     const modalLabelInputAddEl = document.getElementById('modalLabelInputAdd');
     const modalNotesInputAddEl = document.getElementById('modalNotesInputAdd');
     const modalProjectSelectAddEl = document.getElementById('modalProjectSelectAdd');
-    const modalRemindMeAddEl = document.getElementById('modalRemindMeAdd');
-    const modalReminderDateAddEl = document.getElementById('modalReminderDateAdd');
-    const modalReminderTimeAddEl = document.getElementById('modalReminderTimeAdd');
-    const modalReminderEmailAddEl = document.getElementById('modalReminderEmailAdd');
     const modalRecurrenceAddEl = document.getElementById('modalRecurrenceAdd');
-    const modalHideFromMirrorAddEl = document.getElementById('modalHideFromMirrorAdd');
 
     const taskText = modalTaskInputAddEl.value.trim();
     const dueDate = modalDueDateInputAddEl.value;
@@ -46,10 +35,10 @@ export async function handleAddTaskFormSubmit(event) {
     const priority = modalPriorityInputAddEl.value;
     const label = modalLabelInputAddEl.value.trim();
     const notes = modalNotesInputAddEl.value.trim();
-    const projectId = isFeatureEnabled('projectFeature') && modalProjectSelectAddEl ? parseInt(modalProjectSelectAddEl.value) : 0;
+    const projectId = modalProjectSelectAddEl ? parseInt(modalProjectSelectAddEl.value) : 0;
     
     let recurrence = null;
-    if (isFeatureEnabled('advancedRecurrence') && modalRecurrenceAddEl && modalRecurrenceAddEl.value !== 'none') {
+    if (modalRecurrenceAddEl && modalRecurrenceAddEl.value !== 'none') {
         const recurrenceIntervalAddEl = document.getElementById('recurrenceIntervalAdd');
         const weeklyRecurrenceOptionsAddEl = document.getElementById('weeklyRecurrenceOptionsAdd');
         const recurrenceEndDateAddEl = document.getElementById('recurrenceEndDateAdd');
@@ -73,44 +62,25 @@ export async function handleAddTaskFormSubmit(event) {
         }
     }
 
-    let isReminderSet = false, reminderDate = null, reminderTime = null, reminderEmail = null;
-    if (isFeatureEnabled('reminderFeature') && modalRemindMeAddEl && modalRemindMeAddEl.checked) {
-        isReminderSet = true;
-        reminderDate = modalReminderDateAddEl.value;
-        reminderTime = modalReminderTimeAddEl.value;
-        reminderEmail = modalReminderEmailAddEl.value.trim();
-        if (!reminderDate || !reminderTime || !reminderEmail) {
-            LoggingService.warn('[TasksFormHandlers] Reminder fields not completely filled for new task.', { functionName, reminderDate, reminderTime, reminderEmail });
-            EventBus.publish('displayUserMessage', { text: 'Please fill all reminder fields or disable the reminder.', type: 'error' });
-            return;
-        }
-    }
-
-    // Capture the state of the Hide from Magic Mirror checkbox
-    const hideFromMirror = modalHideFromMirrorAddEl ? modalHideFromMirrorAddEl.checked : false;
-
     if (taskText) {
         let parsedResult = { parsedDate: dueDate, remainingText: taskText };
         if (!dueDate && TaskService.parseDateFromText) {
             parsedResult = TaskService.parseDateFromText(taskText);
         }
 
-        const subTasksToAdd = isFeatureEnabled('subTasksFeature') ? [...tempSubTasksForAddModal] : [];
+        const subTasksToAdd = [...tempSubTasksForAddModal];
 
         await TaskService.addTask({
             text: parsedResult.remainingText,
             dueDate: parsedResult.parsedDate || dueDate,
             time, priority, label, notes, projectId,
-            isReminderSet, reminderDate, reminderTime, reminderEmail,
             subTasks: subTasksToAdd,
-            recurrence,
-            hideFromMirror
+            recurrence
         });
         EventBus.publish('displayUserMessage', { text: 'Task added successfully!', type: 'success' });
         closeAddModal();
         clearTempSubTasksForAddModal();
         
-        // Refresh the current view to show the new task without changing filters
         refreshTaskView();
     } else {
         EventBus.publish('displayUserMessage', { text: 'Task description cannot be empty.', type: 'error' });
@@ -131,12 +101,7 @@ export async function handleEditTaskFormSubmit(event) {
     const modalLabelInputViewEditEl = document.getElementById('modalLabelInputViewEdit');
     const modalNotesInputViewEditEl = document.getElementById('modalNotesInputViewEdit');
     const modalProjectSelectViewEditEl = document.getElementById('modalProjectSelectViewEdit');
-    const modalRemindMeViewEditEl = document.getElementById('modalRemindMeViewEdit');
-    const modalReminderDateViewEditEl = document.getElementById('modalReminderDateViewEdit');
-    const modalReminderTimeViewEditEl = document.getElementById('modalReminderTimeViewEdit');
-    const modalReminderEmailViewEditEl = document.getElementById('modalReminderEmailViewEdit');
     const modalRecurrenceViewEditEl = document.getElementById('modalRecurrenceViewEdit');
-    const modalHideFromMirrorViewEditEl = document.getElementById('modalHideFromMirrorViewEdit');
 
     const taskText = modalTaskInputViewEditEl.value.trim();
     const dueDate = modalDueDateInputViewEditEl.value;
@@ -144,56 +109,36 @@ export async function handleEditTaskFormSubmit(event) {
     const priority = modalPriorityInputViewEditEl.value;
     const label = modalLabelInputViewEditEl.value.trim();
     const notes = modalNotesInputViewEditEl.value.trim();
-    const projectId = isFeatureEnabled('projectFeature') && modalProjectSelectViewEditEl ? parseInt(modalProjectSelectViewEditEl.value) : 0;
+    const projectId = modalProjectSelectViewEditEl ? parseInt(modalProjectSelectViewEditEl.value) : 0;
 
     let recurrence = null;
-    if (isFeatureEnabled('advancedRecurrence') && modalRecurrenceViewEditEl) {
-        if (modalRecurrenceViewEditEl.value !== 'none') {
-            const recurrenceIntervalViewEditEl = document.getElementById('recurrenceIntervalViewEdit');
-            const weeklyRecurrenceOptionsViewEditEl = document.getElementById('weeklyRecurrenceOptionsViewEdit');
-            const recurrenceEndDateViewEditEl = document.getElementById('recurrenceEndDateViewEdit');
-            
-            recurrence = {
-                frequency: modalRecurrenceViewEditEl.value,
-                interval: parseInt(recurrenceIntervalViewEditEl.value) || 1
-            };
+    if (modalRecurrenceViewEditEl && modalRecurrenceViewEditEl.value !== 'none') {
+        const recurrenceIntervalViewEditEl = document.getElementById('recurrenceIntervalViewEdit');
+        const weeklyRecurrenceOptionsViewEditEl = document.getElementById('weeklyRecurrenceOptionsViewEdit');
+        const recurrenceEndDateViewEditEl = document.getElementById('recurrenceEndDateViewEdit');
+        
+        recurrence = {
+            frequency: modalRecurrenceViewEditEl.value,
+            interval: parseInt(recurrenceIntervalViewEditEl.value) || 1
+        };
 
-            if (recurrence.frequency === 'weekly') {
-                const checkedDays = weeklyRecurrenceOptionsViewEditEl.querySelectorAll('input[type="checkbox"]:checked');
-                recurrence.daysOfWeek = Array.from(checkedDays).map(cb => cb.value);
-                if (recurrence.daysOfWeek.length === 0) {
-                    EventBus.publish('displayUserMessage', { text: 'Please select at least one day for weekly recurrence.', type: 'error' });
-                    return;
-                }
-            }
-
-            if (recurrenceEndDateViewEditEl && recurrenceEndDateViewEditEl.value) {
-                recurrence.endDate = recurrenceEndDateViewEditEl.value;
+        if (recurrence.frequency === 'weekly') {
+            const checkedDays = weeklyRecurrenceOptionsViewEditEl.querySelectorAll('input[type="checkbox"]:checked');
+            recurrence.daysOfWeek = Array.from(checkedDays).map(cb => cb.value);
+            if (recurrence.daysOfWeek.length === 0) {
+                EventBus.publish('displayUserMessage', { text: 'Please select at least one day for weekly recurrence.', type: 'error' });
+                return;
             }
         }
-    }
 
-    let isReminderSet = false, reminderDate = null, reminderTime = null, reminderEmail = null;
-    if (isFeatureEnabled('reminderFeature') && modalRemindMeViewEditEl && modalRemindMeViewEditEl.checked) {
-        isReminderSet = true;
-        reminderDate = modalReminderDateViewEditEl.value;
-        reminderTime = modalReminderTimeViewEditEl.value;
-        reminderEmail = modalReminderEmailViewEditEl.value.trim();
-        if (!reminderDate || !reminderTime || !reminderEmail) {
-            EventBus.publish('displayUserMessage', { text: 'Please fill all reminder fields or disable the reminder for edit.', type: 'error' });
-            return;
+        if (recurrenceEndDateViewEditEl && recurrenceEndDateViewEditEl.value) {
+            recurrence.endDate = recurrenceEndDateViewEditEl.value;
         }
     }
-
-    // Capture the state of the Hide from Magic Mirror checkbox
-    const hideFromMirror = modalHideFromMirrorViewEditEl ? modalHideFromMirrorViewEditEl.checked : false;
 
     if (taskText && taskId) {
         const taskUpdateData = {
-            text: taskText, dueDate, time, priority, label, notes, projectId,
-            isReminderSet, reminderDate, reminderTime, reminderEmail,
-            recurrence,
-            hideFromMirror
+            text: taskText, dueDate, time, priority, label, notes, projectId, recurrence
         };
 
         await TaskService.updateTask(taskId, taskUpdateData);

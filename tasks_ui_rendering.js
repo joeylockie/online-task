@@ -34,7 +34,6 @@ export let manageLabelsModal, modalDialogManageLabels, closeManageLabelsModalBtn
 export let addNewLabelForm, newLabelInput, existingLabelsList;
 export let settingsModal, modalDialogSettings, openSettingsModalButton, closeSettingsModalBtn, closeSettingsSecondaryBtn;
 export let settingsClearCompletedBtn, settingsManageLabelsBtn;
-export let featureFlagsListContainer;
 export let yourTasksHeading, mainContentArea;
 export let criticalErrorDisplay, criticalErrorMessage, criticalErrorId, closeCriticalErrorBtn;
 
@@ -112,7 +111,6 @@ export function initializeDOMElements() {
     closeSettingsSecondaryBtn = document.getElementById('closeSettingsSecondaryBtn');
     settingsClearCompletedBtn = document.getElementById('settingsClearCompletedBtn');
     settingsManageLabelsBtn = document.getElementById('settingsManageLabelsBtn');
-    featureFlagsListContainer = document.getElementById('featureFlagsListContainer');
     yourTasksHeading = document.getElementById('yourTasksHeading');
     criticalErrorDisplay = document.getElementById('criticalErrorDisplay');
     criticalErrorMessage = document.getElementById('criticalErrorMessage');
@@ -222,21 +220,15 @@ export function setSidebarMinimized(minimize) {
     LoggingService.debug(`[UI Rendering] Sidebar minimized state set to: ${minimize}. CSS should now apply relevant styles.`, {module: 'tasks_ui_rendering'});
 }
 
-// --- Custom Smart View Rendering ---
 export function renderCustomSmartViewButtons(customViews) {
     if (!smartViewButtonsContainer) return;
     
-    // 1. Remove existing custom buttons
     const existingCustomButtons = smartViewButtonsContainer.querySelectorAll('.custom-smart-view-btn');
     existingCustomButtons.forEach(btn => btn.remove());
     
-    // 2. Find the "Completed" button
     const completedBtn = smartViewButtonsContainer.querySelector('[data-filter="completed"]');
-    
-    // 3. Determine if sidebar is minimized
     const isMinimized = document.getElementById('taskSidebar')?.classList.contains('sidebar-minimized');
     
-    // 4. Draw each button
     customViews.forEach(view => {
         const btn = document.createElement('button');
         btn.dataset.filter = view.label; 
@@ -253,22 +245,17 @@ export function renderCustomSmartViewButtons(customViews) {
         }
     });
 
-    // 5. Force a sync of the sidebar styles
     setSidebarMinimized(!!isMinimized);
-    
-    // 6. Ensure styling applies properly
     styleSmartViewButtons();
 }
 
-
-// --- Task Rendering ---
 export function refreshTaskView() {
     if (!document.getElementById('taskList')) {
         LoggingService.debug('[UI Rendering] Not on the main task page. Skipping refreshTaskView.', {module: 'tasks_ui_rendering'});
         return;
     }
 
-    if (!mainContentArea || !ViewManager || typeof window.isFeatureEnabled !== 'function') { LoggingService.error("[RefreshTaskView] Core dependencies not found.", null, {module: 'tasks_ui_rendering'}); return; } 
+    if (!mainContentArea || !ViewManager) { LoggingService.error("[RefreshTaskView] Core dependencies not found.", null, {module: 'tasks_ui_rendering'}); return; } 
     updateYourTasksHeading();
     styleSmartViewButtons();
     updateSortButtonStates();
@@ -356,7 +343,7 @@ export function updateYourTasksHeading() {
 }
 
 export function initializeUiRenderingSubscriptions() {
-    if (!EventBus || !ViewManager || typeof window.isFeatureEnabled !== 'function') { LoggingService.error("[UI Rendering] Core dependencies for subscriptions not available.", null, {module: 'tasks_ui_rendering'}); return; } 
+    if (!EventBus || !ViewManager) { LoggingService.error("[UI Rendering] Core dependencies for subscriptions not available.", null, {module: 'tasks_ui_rendering'}); return; } 
 
     EventBus.subscribe('displayUserMessage', (data) => {
         if (data && data.text) {
@@ -377,7 +364,6 @@ export function initializeUiRenderingSubscriptions() {
     EventBus.subscribe('sortChanged', (newSort) => { LoggingService.debug("[UI Rendering] Event received: sortChanged. Refreshing view and sort buttons.", {module: 'tasks_ui_rendering'}); refreshTaskView(); updateSortButtonStates(); });
     EventBus.subscribe('searchTermChanged', (newSearchTerm) => { LoggingService.debug("[UI Rendering] Event received: searchTermChanged. Refreshing view.", {module: 'tasks_ui_rendering'}); refreshTaskView(); });
     EventBus.subscribe('viewModeChanged', (newViewMode) => { LoggingService.debug("[UI Rendering] Event received: viewModeChanged. Refreshing view and UI states.", {module: 'tasks_ui_rendering'}); refreshTaskView();  });
-    EventBus.subscribe('featureFlagsUpdated', (updateData) => { LoggingService.debug("[UI Rendering] Event received: featureFlagsUpdated. Certain UI states might need refresh.", {module: 'tasks_ui_rendering'}); refreshTaskView();  });
     EventBus.subscribe('labelsChanged', (newLabels) => {
         LoggingService.debug("[UI Rendering] Event received: labelsChanged. Populating datalists.", {module: 'tasks_ui_rendering'});
         if(existingLabelsDatalist) populateDatalist(existingLabelsDatalist);

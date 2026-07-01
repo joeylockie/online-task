@@ -2,18 +2,16 @@
 import { getTodayDateString, getDateString, getUTCDateString } from './utils.js';
 import AppStore from './store.js';
 import LoggingService from './loggingService.js';
-import db from './database.js'; // Re-imported for local operations
+import db from './database.js';
 
 const syncChannel = new BroadcastChannel('lockiemedia_sync');
 
-// Triggered after successful writes to notify other tabs and update the current view
 async function _syncAndNotify() {
     const allTasks = await db.tasks.toArray();
     AppStore.setTasks(allTasks);
     syncChannel.postMessage({ type: 'DATA_UPDATED' });
 }
 
-// --- Pure Functions (Unchanged) ---
 export function getPriorityClass(priority) {
     switch (priority) {
         case 'high': return 'bg-red-100 text-red-700 dark:bg-red-700 dark:text-red-100';
@@ -46,8 +44,6 @@ export function parseDateFromText(text) {
     return { parsedDate, remainingText };
 }
 
-// --- Local Data Functions ---
-
 export async function addTask(taskData) {
     const functionName = 'addTask (TaskService)';
     try {
@@ -60,13 +56,8 @@ export async function addTask(taskData) {
             priority: taskData.priority || 'medium',
             label: taskData.label || '',
             notes: taskData.notes || '',
-            isReminderSet: taskData.isReminderSet || false,
-            reminderDate: taskData.reminderDate || null,
-            reminderTime: taskData.reminderTime || null,
-            reminderEmail: taskData.reminderEmail || null,
             completedDate: null,
-            recurrence: taskData.recurrence || null,
-            hideFromMirror: taskData.hideFromMirror ? 1 : 0
+            recurrence: taskData.recurrence || null
         };
 
         const newId = await db.tasks.add(newTask);
@@ -86,9 +77,6 @@ export async function updateTask(taskId, taskUpdateData) {
     const functionName = 'updateTask (TaskService)';
     try {
         const updates = { ...taskUpdateData };
-        if (updates.hideFromMirror !== undefined) {
-            updates.hideFromMirror = updates.hideFromMirror ? 1 : 0;
-        }
 
         await db.tasks.update(taskId, updates);
         LoggingService.info(`[TaskService] Task updated locally: ${taskId}`, { functionName });
@@ -109,7 +97,6 @@ export async function toggleTaskComplete(taskId) {
         const isNowCompleted = !taskToToggle.completed;
         let isRecurringAndRenewed = false;
 
-        // Ported Recurrence Logic
         if (isNowCompleted && taskToToggle.recurrence && taskToToggle.recurrence.frequency !== 'none') {
             const recurrence = taskToToggle.recurrence;
             const interval = recurrence.interval || 1;
@@ -145,7 +132,6 @@ export async function toggleTaskComplete(taskId) {
                 taskToToggle.dueDate = getUTCDateString(nextDueDate);
                 taskToToggle.completed = false;
                 taskToToggle.completedDate = null;
-                taskToToggle.reminderSent = 0;
                 isRecurringAndRenewed = true;
             }
         }

@@ -3,40 +3,18 @@
 
 import EventBus from './eventBus.js';
 import AppStore from './store.js';
-import { setupEventListeners, applyActiveFeatures, setFilter } from './tasks_ui_event_handlers.js';
+import { setupEventListeners, setFilter } from './tasks_ui_event_handlers.js';
 import ViewManager from './viewManager.js';
 import { AdvancedRecurrenceFeature } from './feature_advanced_recurrence.js';
 import { ShoppingListFeature } from './feature_shopping_list.js';
-import { ReminderFeature } from './feature_reminder.js';
 import { WorkFeature } from './feature_work.js';
 import LoggingService from './loggingService.js';
-import { DesktopNotificationsFeature } from './feature_desktop_notifications.js';
 import * as uiRendering from './tasks_ui_rendering.js';
 import { refreshTaskView } from './tasks_ui_rendering.js';
 import * as ModalInteractions from './tasks_modal_interactions.js';
 
-// NEW: Import our custom smart views feature!
+// Custom smart views feature
 import { CustomSmartViewsFeature } from './feature_custom_smart_views.js';
-
-// --- Feature Handling ---
-// This function determines which features are active for the Task Manager.
-function isFeatureEnabled(featureName) {
-    const features = {
-        // Active Features
-        reminderFeature: true,
-        advancedRecurrence: true,
-        desktopNotificationsFeature: true,
-        shoppingListFeature: true,
-        workFeature: true,
-        userRoleFeature: true,
-        debugMode: true,
-        
-        // NEW: Turn on our custom smart views feature!
-        customSmartViewsFeature: true 
-    };
-    // If the feature isn't in the list, it defaults to false.
-    return features[featureName] || false;
-}
 
 // --- Global Error Handling ---
 let showCriticalErrorImported = (message, errorId) => {
@@ -92,16 +70,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Phase 3: Initialize all feature modules relevant to the Task Manager
     window.AppFeatures = {
-        LoggingService, EventBus, AppStore, ViewManager, ModalInteractions,
-        ReminderFeature, AdvancedRecurrenceFeature,
+        LoggingService, 
+        EventBus, 
+        AppStore, 
+        ViewManager, 
+        ModalInteractions,
+        AdvancedRecurrenceFeature,
         ShoppingListFeature,
         WorkFeature,
-        DesktopNotificationsFeature,
-        
-        // NEW: Register the feature here so it gets started!
-        CustomSmartViewsFeature, 
-        
-        isFeatureEnabled
+        CustomSmartViewsFeature 
     };
     
     uiRendering.initializeUiRenderingSubscriptions();
@@ -119,7 +96,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     // Phase 4: Initial Render
-    applyActiveFeatures();
     setFilter(ViewManager.getCurrentFilter());
     uiRendering.setSidebarMinimized(localStorage.getItem('sidebarState') === 'minimized');
     refreshTaskView();
@@ -130,10 +106,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     LoggingService.info("---------------------------------------------------------");
 });
 
-// Expose our new local isFeatureEnabled globally for any modules that might need it
-if (typeof window.isFeatureEnabled === 'undefined') {
-    window.isFeatureEnabled = isFeatureEnabled;
-}
+// Expose LoggingService globally
 if (typeof window.LoggingService === 'undefined') {
     window.LoggingService = LoggingService;
 }

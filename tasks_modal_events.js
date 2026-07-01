@@ -9,7 +9,7 @@ import {
     closeSettingsModal, openManageLabelsModal,
     openSettingsModal,
     closeManageLabelsModal,
-    closeViewTaskDetailsModal,
+    closeViewTaskDetailsModal
 } from './tasks_modal_interactions.js';
 
 // Helper function to attach listeners
@@ -30,7 +30,7 @@ export function setupModalEventListeners() {
     attachListener('openAddModalButton', 'click', openAddModal, 'openAddModal');
     attachListener('settingsManageLabelsBtn', 'click', openManageLabelsModal, 'openManageLabelsModal');
     attachListener('openSettingsModalButton', 'click', openSettingsModal, 'openSettingsModal');
-  
+
     // Modal Closers
     const modalCloserListeners = [
         { id: 'closeAddModalBtn', handler: closeAddModal, name: 'closeAddModal (primary)' },
@@ -47,7 +47,7 @@ export function setupModalEventListeners() {
         { id: 'settingsModal', handler: (event) => { if(event.target.id === 'settingsModal') closeSettingsModal(); }, name: 'closeSettingsModal (backdrop)'},
         { id: 'closeManageLabelsModalBtn', handler: closeManageLabelsModal, name: 'closeManageLabelsModal (primary)' },
         { id: 'closeManageLabelsSecondaryBtn', handler: closeManageLabelsModal, name: 'closeManageLabelsModal (secondary)' },
-        { id: 'manageLabelsModal', handler: (event) => { if(event.target.id === 'manageLabelsModal') closeManageLabelsModal(); }, name: 'closeManageLabelsModal (backdrop)'},
+        { id: 'manageLabelsModal', handler: (event) => { if(event.target.id === 'manageLabelsModal') closeManageLabelsModal(); }, name: 'closeManageLabelsModal (backdrop)'}
     ];
     modalCloserListeners.forEach(listener => attachListener(listener.id, 'click', listener.handler, listener.name));
 

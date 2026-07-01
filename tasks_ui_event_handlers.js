@@ -7,15 +7,12 @@ import * as TaskService from './taskService.js';
 import * as LabelService from './labelService.js';
 import ModalStateService from './modalStateService.js';
 import EventBus from './eventBus.js';
-// import * as BulkActionService from './bulkActionService.js'; // REMOVED
 import LoggingService from './loggingService.js';
 
-// Import UI rendering functions from the new tasks-specific module
 import {
     setSidebarMinimized,
 } from './tasks_ui_rendering.js';
 
-// Import modal interaction functions
 import {
     populateManageLabelsList,
     openAddModal,
@@ -24,18 +21,13 @@ import {
     closeSettingsModal
 } from './tasks_modal_interactions.js';
 
-// Import form event handlers
 import {
     handleAddTaskFormSubmit,
     handleEditTaskFormSubmit,
     handleAddNewLabelFormSubmit
 } from './tasks_form_handlers.js';
 
-// Import the new modal event handlers setup function
 import { setupModalEventListeners } from './tasks_modal_events.js';
-
-// Import Feature Modules (some might be used by handlers still in this file)
-// REMOVED: import { ProjectsFeature } from './feature_projects.js';
 
 export let tempSubTasksForAddModal = [];
 
@@ -44,30 +36,6 @@ export function clearTempSubTasksForAddModal() {
     LoggingService.debug('[UIEventHandlers] Temporary sub-tasks for add modal cleared.', { functionName, count: tempSubTasksForAddModal.length });
     tempSubTasksForAddModal = [];
 }
-
-export function applyActiveFeatures() {
-    const functionName = 'applyActiveFeatures';
-    LoggingService.info('[UIEventHandlers] Applying active features based on current flags.', { functionName });
-
-    if (typeof window.isFeatureEnabled !== 'function') {
-        LoggingService.error('[UIEventHandlers] isFeatureEnabled function not available globally.', null, {functionName});
-        return;
-    }
-    
-    if (window.AppFeatures) {
-        for (const featureKey in window.AppFeatures) {
-            if (window.AppFeatures[featureKey] && typeof window.AppFeatures[featureKey].updateUIVisibility === 'function') {
-                window.AppFeatures[featureKey].updateUIVisibility();
-            }
-        }
-    }
-
-    // REMOVED Bulk Actions check
-    
-    EventBus.publish('requestViewRefresh');
-    LoggingService.info('[UIEventHandlers] Finished applying active features.', { functionName });
-}
-
 
 // Task action handlers (toggleComplete, deleteTask)
 function toggleComplete(taskId) {
@@ -281,12 +249,4 @@ export function setupEventListeners() {
     });
 
     LoggingService.info("[UIEventHandlers] All non-modal, non-form event listeners setup process completed.", { functionName });
-}
-
-// EventBus subscription for feature flag updates
-if (EventBus && typeof applyActiveFeatures === 'function') {
-    EventBus.subscribe('featureFlagsUpdated', (data) => {
-        LoggingService.info("[UIEventHandlers] Event received: featureFlagsUpdated. Re-applying active features.", { functionName: 'featureFlagsUpdatedHandler (subscription)', eventData: data });
-        applyActiveFeatures();
-    });
 }
